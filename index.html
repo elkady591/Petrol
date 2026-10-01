@@ -140,6 +140,11 @@ h1{font-family:var(--f-display);font-weight:700;font-size:22px;margin:0}
 .sv .br{grid-column:2;font-size:11.5px;color:var(--muted);text-align:end}
 .sv .nt{grid-column:1/-1;font-size:12px;color:var(--muted);white-space:pre-line}
 #svMore{margin-top:8px}
+.welcome{display:grid;gap:12px}
+.welcome h2{font-size:17px;margin:0}
+.welcome p{margin:0;color:var(--muted);font-size:14px}
+.welcome .btn{padding:13px;font-size:15px}
+.nocar .periods,.nocar .app>section:not(.welcome),.nocar .dock,.nocar .mast .seg{display:none!important}
 .refctl{display:grid;gap:10px;margin-bottom:12px}
 input[type=search]{font-size:15px}
 .rt{border-top:1px solid var(--line)}
@@ -288,6 +293,13 @@ html{padding-top:0}
   </header>
 
   <div class="alerts" id="alerts"></div>
+
+  <section class="card welcome" id="welcome" hidden>
+    <h2>أهلاً بيك في دفتر البنزين</h2>
+    <p>ابدأ بإضافة عربيتك، وبعدها سجّل كل تفويلة والتطبيق هيحسبلك الاستهلاك وتكلفة الكيلو. بياناتك بتتخزن على موبايلك ده بس، ومحدش غيرك بيشوفها.</p>
+    <button class="btn pri wide" type="button" id="wAdd">+ زوّد عربيتك</button>
+    <label class="btn ghost wide filebtn" style="text-align:center">عندي نسخة احتياطية، رجّعها<input type="file" id="wImport" accept=".json,application/json"></label>
+  </section>
 
   <nav class="periods" id="periods" aria-label="الفترة"></nav>
 
@@ -547,6 +559,7 @@ const backupAge=()=>meta.lastBackup?Math.floor((Date.now()-meta.lastBackup)/DAY)
 const backupDue=()=>fills.length&&(!meta.lastBackup||Date.now()-meta.lastBackup>14*DAY)&&!(meta.snooze&&Date.now()-meta.snooze<3*DAY);
 
 function render(){
+  document.body.classList.toggle('nocar',!cars.length);$('welcome').hidden=!!cars.length;
   renderAlerts();
   $('cars').style.setProperty('--cols',Math.max(cars.length,1));
   $('cars').innerHTML=cars.map(c=>`<button type="button" aria-pressed="${c.id===current}" data-id="${esc(c.id)}">${esc(c.name)}</button>`).join('');
@@ -786,8 +799,11 @@ $('carForm').onsubmit=e=>{
   if(!(good>0)||!(bad>good))return fail('حد «عالي» لازم يكون أكبر من حد «كويس».');
   if(carEdit)Object.assign(cars.find(c=>c.id===carEdit),{name,price,good,bad});
   else{const id='c'+Date.now().toString(36);cars.push({id,name,price,good,bad,order:Math.max(0,...cars.map(c=>c.order||0))+1,maint:[]});current=id;ls('car',id);sel=openId=null}
-  if(!save())return;render();openSettings();toast(carEdit?'العربية اتعدّلت':'العربية اتضافت');
+  if(!save())return;render();
+  if(cars.length===1&&!carEdit)closeS();else openSettings();   // first car from the welcome card → straight to the app
+  toast(carEdit?'العربية اتعدّلت':'العربية اتضافت');
 };
+$('wAdd').onclick=()=>openCar(null);
 $('cDel').onclick=()=>{
   const c=cars.find(x=>x.id===carEdit);if(!c||cars.length<2)return;
   const n=fills.filter(f=>f.car===c.id).length,ns=services.filter(s=>s.car===c.id).length;
@@ -939,10 +955,6 @@ $('scrim').onclick=closeS;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeS()});
 
 // ---- storage (data lives on this phone) ----
-const SEED={cars:[{id:'aveo',name:'Chevrolet Aveo',price:22.25,order:1},{id:'astra',name:'Opel Astra-J',price:24,order:2}],
-fills:[['aveo','2026-08-30',39732,500],['aveo','2026-09-09',39890,820],['aveo','2026-09-11',40105,475],['aveo','2026-09-23',40216,410],['aveo','2026-09-26',40470,710],
-['astra','2026-08-30',279440,1009.99],['astra','2026-09-09',279755,560],['astra','2026-09-13',280385,1411],['astra','2026-09-16',280905,1165.99],['astra','2026-09-21',281540,1310],['astra','2026-09-27',281940,1020]]
-.map((x,i)=>({id:'s'+i,car:x[0],date:x[1],odo:x[2],money:x[3]}))};
 // v1 data had one price per car and no full/partial flag: old fills take the car's price and count as full tanks.
 function normalize(d){
   const cs=d.cars.map(c=>({id:String(c.id),name:String(c.name||'عربية'),price:Number(c.price)||0,order:Number(c.order)||0,good:Number(c.good)||9,bad:Number(c.bad)||12,
@@ -992,10 +1004,12 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify({v:2,cars,fills,serv
 function pickCar(){let saved=null;try{saved=localStorage.getItem('car')}catch(_){}
   if(!cars.some(c=>c.id===current))current=cars.some(c=>c.id===saved)?saved:(cars[0]&&cars[0].id)||null}
 function load(){let d=null;try{d=JSON.parse(localStorage.getItem(KEY))}catch(_){}
-  if(!d||!Array.isArray(d.cars))d=JSON.parse(JSON.stringify(SEED));
+  // a new phone starts empty; the Car Notes history only lands on a phone that already had data
+  // (marked as already seeded, so a friend's own backups never pick it up either)
+  const fresh=!d||!Array.isArray(d.cars);if(fresh)d={cars:[],fills:[],seeded:Object.keys(SEED_SV)};
   const n=normalize(d);cars=n.cars;fills=n.fills;services=n.services;
   meta={lastBackup:d.lastBackup||null,snooze:d.snooze||null,seeded:Array.isArray(d.seeded)?d.seeded:[]};
-  runSeeds();save();pickCar();render()}
+  if(!fresh)runSeeds();save();pickCar();render()}
 load();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 
@@ -1010,7 +1024,7 @@ async function doBackup(){
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);done('النسخة الاحتياطية اتحفظت في التنزيلات');
 }
 $('exportBtn').onclick=doBackup;
-$('importFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+$('importFile').onchange=$('wImport').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(!Array.isArray(d.cars)||!Array.isArray(d.fills))throw 0;
     const n=normalize(d);cars=n.cars;fills=n.fills;services=n.services;meta.seeded=Array.isArray(d.seeded)?d.seeded:[];runSeeds();
     current=null;sel=openId=armed=null;pickCar();save();render();closeS();toast(`اترجّع ${fills.length} تفويلة و${services.length} صيانة`)}
