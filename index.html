@@ -140,6 +140,23 @@ h1{font-family:var(--f-display);font-weight:700;font-size:22px;margin:0}
 .sv .br{grid-column:2;font-size:11.5px;color:var(--muted);text-align:end}
 .sv .nt{grid-column:1/-1;font-size:12px;color:var(--muted);white-space:pre-line}
 #svMore{margin-top:8px}
+.refctl{display:grid;gap:10px;margin-bottom:12px}
+input[type=search]{font-size:15px}
+.rt{border-top:1px solid var(--line)}
+.rt:first-child{border:0}
+.rth{width:100%;border:0;background:transparent;text-align:start;padding:10px 2px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:baseline}
+.rth .nm{font-weight:600}
+.rth .cnt{font-size:12px;color:var(--muted);background:var(--soft);border-radius:999px;padding:1px 9px;justify-self:end}
+.rth .sub{font-size:12.5px;color:var(--muted)}
+.rth .sub.end{text-align:end;color:var(--ink);font-weight:600}
+.rth .sub.wide{grid-column:1/-1}
+.rt.open .rth .nm{color:var(--petrol)}
+.rtl{background:var(--soft);border-radius:12px;padding:4px 10px;margin-bottom:10px}
+.rtt{margin:4px 2px 6px;font-size:12.5px;font-weight:600;text-align:end}
+.rate{font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:999px;margin-inline-start:6px;vertical-align:1px;color:#fff}
+.rate.good{background:var(--good)} .rate.warn{background:var(--warn)} .rate.bad{background:var(--bad)}
+:root[data-theme="dark"] .rate{color:#0E141A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rate{color:#0E141A}}
 .twobtn{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:12px}
 .twobtn .btn{padding:11px}
 .periods.inset{margin-inline:0;padding-inline:0}
@@ -365,6 +382,10 @@ html{padding-top:0}
     <div class="clist" id="carList"></div>
     <button class="btn ghost wide" type="button" id="addCar">+ عربية جديدة</button>
   </div>
+  <div class="sec">
+    <h4>الصيانة</h4>
+    <button class="crow" type="button" id="refOpen"><span><b>مرجع الصيانة</b><span>كل صيانة اتعملت، آخر مرة إمتى وبكام وكل كام كيلو</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+  </div>
   <div class="sec" id="cmpSec">
     <h4>مقارنة العربيات</h4>
     <button class="crow" type="button" id="cmpOpen"><span><b>قارن بين العربيات</b><span>الاستهلاك وتكلفة الكيلو والصيانة، في أي فترة تختارها</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
@@ -404,6 +425,18 @@ html{padding-top:0}
   </div>
   <div class="cmp" id="cmp"></div>
   <p class="note">الأخضر هو الأحسن. الاستهلاك بيتحسب من التفويلات اللي في الفترة دي بس.</p>
+</div>
+
+<div class="sheet" id="refSheet" role="dialog" aria-modal="true" aria-labelledby="rfh">
+  <div class="grab"></div>
+  <h3><b id="rfh" style="font-weight:600">مرجع الصيانة</b><button class="btn ghost small" type="button" id="refBack">رجوع</button></h3>
+  <div class="refctl">
+    <div class="seg mini" id="refCars"></div>
+    <input type="search" id="refQ" placeholder="دوّر: زيت، بوجيهات، تيل…" autocomplete="off">
+    <div class="seg mini" id="refView" style="--cols:2"><button type="button" data-v="type">بالنوع</button><button type="button" data-v="date">بالتاريخ</button></div>
+    <p class="note" id="refSum" style="margin:0"></p>
+  </div>
+  <div id="refBody"></div>
 </div>
 
 <div class="sheet" id="svSheet" role="dialog" aria-modal="true" aria-labelledby="ssh">
@@ -456,6 +489,7 @@ const nice=s=>{const d=new Date(s+'T00:00');return `${d.getDate()} ${MONTHS[d.ge
 const niceY=s=>nice(s)+(s.slice(0,4)===today().slice(0,4)?'':' '+s.slice(0,4));
 const DAY=864e5,G_MIN=4,G_MAX=20,KEY='petrol.v1';
 const band=(v,c)=>{const g=c&&c.good||9,b=c&&c.bad||12;return v<g?['good','استهلاك كويس']:v<b?['warn','استهلاك متوسط']:['bad','استهلاك عالي']};
+const RATE={good:'كويس',warn:'متوسط',bad:'عالي'};
 const ls=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}};
 const dayW=n=>n>=3&&n<=10?'أيام':'يوم';
 
@@ -622,13 +656,15 @@ function renderMaint(){
   const sv=all.filter(s=>inPeriod(s.date));
   $('svTotal').innerHTML=sv.length?`اتصرف ${money(sum(sv,svTotal))} ج`:'';
   $('svWrap').hidden=!all.length;$('mtEmpty').hidden=!!(all.length||car.maint.length);
-  const groups=[];sv.forEach(s=>{const g=groups.at(-1);if(g&&g.date===s.date){g.items.push(s);g.odo=Math.max(g.odo,s.odo)}else groups.push({date:s.date,odo:s.odo,items:[s]})});
-  const shown=svAll?groups:groups.slice(0,3);
-  $('svs').innerHTML=!sv.length?'<p class="empty" style="padding:8px">مفيش صيانة في الفترة دي.</p>':shown.map(g=>`<div class="svg"><span>${niceY(g.date)}</span>${g.odo?`<small><span class="n">${fmt(g.odo,0)}</span> كم</small>`:''}</div>`
-    +g.items.map(s=>`<button class="sv" type="button" data-sv="${esc(s.id)}"><span>${esc(s.name)}</span><span class="tot">${money(svTotal(s))} ج</span>${s.labor?`<span class="br">${s.parts?`قطع ${money(s.parts)} · `:''}مصنعية ${money(s.labor)}</span>`:''}${s.notes?`<span class="nt">${esc(s.notes)}</span>`:''}</button>`).join('')).join('');
+  const groups=svDays(sv);
+  $('svs').innerHTML=!sv.length?'<p class="empty" style="padding:8px">مفيش صيانة في الفترة دي.</p>':svDaysHTML(svAll?groups:groups.slice(0,3));
   $('svMore').hidden=groups.length<=3;
   $('svMore').textContent=svAll?'اعرض أقل':`اعرض الكل (${sv.length} بند)`;
 }
+// services (newest first) grouped into visits by day
+function svDays(list){const groups=[];list.forEach(s=>{const g=groups.at(-1);if(g&&g.date===s.date){g.items.push(s);g.odo=Math.max(g.odo,s.odo)}else groups.push({date:s.date,odo:s.odo,items:[s]})});return groups}
+const svItemHTML=s=>`<button class="sv" type="button" data-sv="${esc(s.id)}"><span>${esc(s.name)}</span><span class="tot">${money(svTotal(s))} ج</span>${s.labor?`<span class="br">${s.parts?`قطع ${money(s.parts)} · `:''}مصنعية ${money(s.labor)}</span>`:''}${s.notes?`<span class="nt">${esc(s.notes)}</span>`:''}</button>`;
+const svDaysHTML=groups=>groups.map(g=>`<div class="svg"><span>${niceY(g.date)}</span>${g.odo?`<small><span class="n">${fmt(g.odo,0)}</span> كم</small>`:''}</div>`+g.items.map(svItemHTML).join('')).join('');
 
 function renderFills(rows,car){
   $('lcount').textContent=rows.length?`${rows.length} تفويلة`:'';
@@ -640,7 +676,7 @@ function renderFills(rows,car){
     if(r.seg)tags.push(`<span class="tag ${band(r.l100,car)[0]}"><span class="n">${fmt(r.l100)}</span> ل/100كم</span>`);
     const span=r.seg&&r.seg.from!==r.prevDate;
     return `<div class="fill ${o?'open':''}"><button type="button" data-open="${esc(r.id)}" aria-expanded="${o}">
-      <span class="d">${nice(r.date)}</span><span class="m"><span class="n">${fmt(r.money,r.money%1?2:0)}</span> <small style="font-weight:500;color:var(--muted);font-size:12px">ج</small></span>
+      <span class="d">${nice(r.date)}${r.seg?`<span class="rate ${band(r.l100,car)[0]}">${RATE[band(r.l100,car)[0]]}</span>`:''}</span><span class="m"><span class="n">${fmt(r.money,r.money%1?2:0)}</span> <small style="font-weight:500;color:var(--muted);font-size:12px">ج</small></span>
       <span class="o">العداد <span class="n">${fmt(r.odo,0)}</span></span><span class="o"><span class="n">${fmt(r.liters,2)}</span> لتر</span>
       <span class="tags">${tags.join('')}</span></button>
       ${o?`<div class="more">
@@ -767,9 +803,10 @@ function fillSug(){const ns=[...new Set([...services.map(s=>s.name),...cars.flat
   $('mtSug').innerHTML=ns.map(n=>`<option value="${esc(n)}">`).join('')}
 function svLive(){const t=(Number($('sParts').value)||0)+(Number($('sLabor').value)||0);
   $('sLive').innerHTML=`<div><span class="l">الإجمالي</span><span class="v">${money(t)} جنيه</span></div>`}
-function openSvc(id,pre){
-  const car=curCar();if(!car)return;
-  const s=id?services.find(x=>x.id===id):null,p=s||pre||{};svEdit=s?s.id:null;armedSvDel=null;
+let svCar=null,svFromRef=false;
+function openSvc(id,pre,fromRef=false){
+  const s=id?services.find(x=>x.id===id):null,car=s?cars.find(c=>c.id===s.car):curCar();if(!car)return;
+  const p=s||pre||{};svEdit=s?s.id:null;svCar=car.id;svFromRef=fromRef;armedSvDel=null;
   $('sshT').textContent=s?'تعديل صيانة':'سجّل صيانة';$('sshcar').textContent=car.name;
   $('sDate').value=p.date||today();$('sOdo').value=p.odo||'';$('sName').value=p.name||'';
   $('sParts').value=s&&s.parts?s.parts:'';$('sLabor').value=s&&s.labor?s.labor:'';$('sNotes').value=s?s.notes:'';
@@ -779,7 +816,7 @@ function openSvc(id,pre){
   if(!s)setTimeout(()=>$(p.name?'sParts':'sName').focus(),250);
 }
 function saveSvc(more){
-  const car=curCar(),fail=t=>{$('sErr').textContent=t;$('sErr').hidden=false};$('sErr').hidden=true;
+  const car=cars.find(c=>c.id===svCar),fail=t=>{$('sErr').textContent=t;$('sErr').hidden=false};$('sErr').hidden=true;
   const date=$('sDate').value,odo=Number($('sOdo').value)||0,name=$('sName').value.trim(),parts=Number($('sParts').value)||0,labor=Number($('sLabor').value)||0,notes=$('sNotes').value.trim();
   if(!car)return;
   if(!date)return fail('اكتب التاريخ.');
@@ -794,15 +831,50 @@ function saveSvc(more){
   if(m&&odo>m.last){m.last=odo;msg+=` · تذكير ${m.name} اتحدّث`}
   if(!save())return;render();toast(msg);
   if(more){$('sName').value='';$('sParts').value='';$('sLabor').value='';$('sNotes').value='';svLive();fillSug();$('sName').focus();return}
-  svEdit=null;closeS();
+  svEdit=null;svDone();
 }
+// back to the maintenance reference if that's where the edit started
+function svDone(){if(svFromRef){renderRef();openS('refSheet')}else closeS()}
 $('svForm').onsubmit=e=>{e.preventDefault();saveSvc(false)};
 $('sSaveMore').onclick=()=>saveSvc(true);
 ['sParts','sLabor'].forEach(id=>$(id).addEventListener('input',svLive));
 $('sDel').onclick=()=>{
   if(!svEdit)return;
   if(armedSvDel!==svEdit){armedSvDel=svEdit;$('sDel').classList.add('sure');$('sDel').textContent='متأكد؟ امسح';return}
-  services=services.filter(s=>s.id!==svEdit);svEdit=null;save();closeS();render();toast('اتمسحت');
+  services=services.filter(s=>s.id!==svEdit);svEdit=null;save();render();svDone();toast('اتمسحت');
+};
+
+// ---- maintenance reference (settings): every service, by type or by date, searchable ----
+let refCar=null,refView='type',refOpen=null;
+function renderRef(){
+  if(!cars.some(c=>c.id===refCar))refCar=current;
+  $('refCars').style.setProperty('--cols',Math.max(cars.length,1));
+  $('refCars').innerHTML=cars.map(c=>`<button type="button" data-rc="${esc(c.id)}" aria-pressed="${c.id===refCar}">${esc(c.name)}</button>`).join('');
+  $('refView').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===refView));
+  const q=$('refQ').value.trim(),list=servicesOf(refCar).filter(s=>!q||s.name.includes(q)||s.notes.includes(q)),cur=curOdo(refCar);
+  $('refSum').innerHTML=list.length?`<span class="n">${list.length}</span> بند · إجمالي ${money(sum(list,svTotal))} ج`:'';
+  if(!list.length){$('refBody').innerHTML=`<p class="empty">${q?'مفيش صيانة بالاسم ده.':'مفيش صيانات متسجلة للعربية دي.'}</p>`;return}
+  if(refView==='date'){$('refBody').innerHTML=`<div class="svs">${svDaysHTML(svDays(list))}</div>`;return}
+  const by=new Map();list.forEach(s=>{if(!by.has(s.name))by.set(s.name,[]);by.get(s.name).push(s)});
+  $('refBody').innerHTML=[...by].map(([name,its])=>{
+    const last=its[0],odos=its.map(s=>s.odo).filter(o=>o>0).sort((a,b)=>a-b),gaps=odos.slice(1).map((o,i)=>o-odos[i]).filter(g=>g>0);
+    // median, so one visit missing from the log doesn't skew the usual interval
+    const sg=gaps.sort((a,b)=>a-b),every=sg.length?(sg[(sg.length-1)>>1]+sg[sg.length>>1])/2:NaN,since=last.odo>0&&Number.isFinite(cur)?cur-last.odo:NaN,o=refOpen===name;
+    return `<div class="rt ${o?'open':''}"><button class="rth" type="button" data-rt="${esc(name)}" aria-expanded="${o}">
+      <span class="nm">${esc(name)}</span><span class="cnt"><span class="n">${its.length}</span> ${its.length>2&&its.length<11?'مرات':'مرة'}</span>
+      <span class="sub">آخر مرة ${niceY(last.date)}${last.odo?` · <span class="n">${fmt(last.odo,0)}</span> كم`:''}</span><span class="sub end">${money(svTotal(last))} ج</span>
+      ${Number.isFinite(since)||Number.isFinite(every)?`<span class="sub wide">${Number.isFinite(since)?`من آخر مرة <span class="n">${fmt(since,0)}</span> كم`:''}${Number.isFinite(since)&&Number.isFinite(every)?' · ':''}${Number.isFinite(every)?`بتتعمل كل <span class="n">${fmt(every,0)}</span> كم تقريبًا`:''}</span>`:''}</button>
+      ${o?`<div class="rtl">${its.map(s=>`<button class="sv" type="button" data-sv="${esc(s.id)}"><span>${niceY(s.date)}${s.odo?` · <span class="n">${fmt(s.odo,0)}</span> كم`:''}</span><span class="tot">${money(svTotal(s))} ج</span>${s.labor?`<span class="br">${s.parts?`قطع ${money(s.parts)} · `:''}مصنعية ${money(s.labor)}</span>`:''}${s.notes?`<span class="nt">${esc(s.notes)}</span>`:''}</button>`).join('')}
+        <p class="rtt">الإجمالي على ${esc(name)}: ${money(sum(its,svTotal))} ج</p></div>`:''}</div>`}).join('');
+}
+$('refOpen').onclick=()=>{refCar=current;refOpen=null;$('refQ').value='';renderRef();openS('refSheet')};
+$('refBack').onclick=openSettings;
+$('refCars').onclick=e=>{const b=e.target.closest('[data-rc]');if(!b)return;refCar=b.dataset.rc;refOpen=null;renderRef()};
+$('refView').onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;refView=b.dataset.v;renderRef()};
+$('refQ').addEventListener('input',()=>{refOpen=null;renderRef()});
+$('refBody').onclick=e=>{
+  const s=e.target.closest('[data-sv]');if(s){openSvc(s.dataset.sv,null,true);return}
+  const t=e.target.closest('[data-rt]');if(t){refOpen=refOpen===t.dataset.rt?null:t.dataset.rt;renderRef()}
 };
 $('svAdd').onclick=()=>openSvc(null);
 $('svs').onclick=e=>{const b=e.target.closest('[data-sv]');if(b)openSvc(b.dataset.sv)};
