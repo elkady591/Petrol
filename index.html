@@ -126,6 +126,23 @@ h1{font-family:var(--f-display);font-weight:700;font-size:22px;margin:0}
 .mt .sub{font-size:12px;color:var(--muted)}
 .mt .rem{font-size:13px;font-weight:600}
 .mt.good .rem{color:var(--good)} .mt.warn .rem{color:var(--warn)} .mt.bad .rem{color:var(--bad)}
+.sub-h{margin:2px 0 8px;font-size:13px;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sub-h small{font-weight:400;font-size:12px}
+#mtWrap+#svWrap{margin-top:16px}
+.svs{display:grid}
+.svg{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:600;font-size:13.5px;padding:10px 2px 2px;border-top:1px solid var(--line)}
+.svg:first-child{border:0;padding-top:0}
+.svg small{color:var(--petrol);font-weight:600;font-size:12.5px}
+:root[data-theme="dark"] .svg small{color:var(--muted)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .svg small{color:var(--muted)}}
+.sv{width:100%;border:0;background:transparent;text-align:start;padding:6px 2px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 10px;align-items:center;border-radius:10px}
+.sv .tot{font-weight:700;text-align:end}
+.sv .br{grid-column:2;font-size:11.5px;color:var(--muted);text-align:end}
+.sv .nt{grid-column:1/-1;font-size:12px;color:var(--muted);white-space:pre-line}
+#svMore{margin-top:8px}
+.twobtn{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:12px}
+.twobtn .btn{padding:11px}
+.periods.inset{margin-inline:0;padding-inline:0}
 .pb{grid-column:1/-1;height:6px;border-radius:6px;background:var(--track);overflow:hidden}
 .pb i{display:block;height:100%;border-radius:6px;background:var(--good)}
 .mt.warn .pb i{background:var(--warn)} .mt.bad .pb i{background:var(--bad)}
@@ -172,7 +189,8 @@ h1{font-family:var(--f-display);font-weight:700;font-size:22px;margin:0}
 .form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .form .full{grid-column:1/-1}
 label{display:grid;gap:5px;font-size:12.5px;color:var(--muted);min-width:0}
-input{font:inherit;font-size:17px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;min-width:0}
+input,textarea{font:inherit;font-size:17px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;min-width:0}
+textarea{font-size:15px;resize:vertical;user-select:text;-webkit-user-select:text}
 input[type=number]{direction:ltr;text-align:right}
 .mrow{display:flex;align-items:center;gap:10px}
 .mrow>span{font-size:12.5px;color:var(--muted);flex:none}
@@ -293,21 +311,19 @@ html{padding-top:0}
   </section>
 
   <section class="card" id="monthCard" aria-labelledby="mch">
-    <h2 id="mch">المصروف الشهري <small id="mavg"></small></h2>
+    <h2 id="mch">مصروف البنزين الشهري <small id="mavg"></small></h2>
     <div class="chart short" id="mchart"></div>
     <div class="xl short" id="mxl"></div>
     <p class="note">دوس على أي شهر عشان تشوف أرقامه بس.</p>
   </section>
 
-  <section class="card" id="cmpCard" aria-labelledby="cph">
-    <h2 id="cph">مقارنة العربيات <small id="cmpp"></small></h2>
-    <div class="cmp" id="cmp"></div>
-  </section>
-
   <section class="card" id="mtCard" aria-labelledby="mth">
-    <h2 id="mth">الصيانة <small id="mtodo"></small></h2>
-    <div class="mts" id="mts"></div>
-    <button class="btn ghost wide" type="button" id="mtAdd" style="margin-top:10px">+ زوّد صيانة</button>
+    <h2 id="mth">الصيانة <small id="svTotal"></small></h2>
+    <div id="mtWrap"><h4 class="sub-h">مواعيد جاية <small id="mtodo"></small></h4><div class="mts" id="mts"></div></div>
+    <div id="svWrap"><h4 class="sub-h">اللي اتعمل</h4><div class="svs" id="svs"></div>
+      <button class="btn ghost wide small" type="button" id="svMore" hidden></button></div>
+    <p class="empty" id="mtEmpty" hidden style="padding:6px 4px 12px">سجّل الصيانات اللي بتعملها (المبلغ والمصنعية والملحوظات)، وكمان تقدر تعمل تذكير بمواعيدها على حسب العداد.</p>
+    <div class="twobtn"><button class="btn pri small" type="button" id="svAdd">+ سجّل صيانة</button><button class="btn ghost small" type="button" id="mtAdd">+ تذكير</button></div>
   </section>
 
   <section class="card" aria-labelledby="lh" style="padding-bottom:12px">
@@ -349,6 +365,10 @@ html{padding-top:0}
     <div class="clist" id="carList"></div>
     <button class="btn ghost wide" type="button" id="addCar">+ عربية جديدة</button>
   </div>
+  <div class="sec" id="cmpSec">
+    <h4>مقارنة العربيات</h4>
+    <button class="crow" type="button" id="cmpOpen"><span><b>قارن بين العربيات</b><span>الاستهلاك وتكلفة الكيلو والصيانة، في أي فترة تختارها</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+  </div>
   <div class="sec">
     <h4>النسخة الاحتياطية</h4>
     <p class="mnote" id="bkNote"></p>
@@ -374,15 +394,45 @@ html{padding-top:0}
   </form>
 </div>
 
+<div class="sheet" id="cmpSheet" role="dialog" aria-modal="true" aria-labelledby="cph">
+  <div class="grab"></div>
+  <h3><b id="cph" style="font-weight:600">مقارنة العربيات</b><button class="btn ghost small" type="button" id="cmpBack">رجوع</button></h3>
+  <div class="periods inset" id="cmpQuick"></div>
+  <div class="form" style="margin:12px 0 4px">
+    <label>من<input type="date" id="cmpFrom"></label>
+    <label>لحد<input type="date" id="cmpTo"></label>
+  </div>
+  <div class="cmp" id="cmp"></div>
+  <p class="note">الأخضر هو الأحسن. الاستهلاك بيتحسب من التفويلات اللي في الفترة دي بس.</p>
+</div>
+
+<div class="sheet" id="svSheet" role="dialog" aria-modal="true" aria-labelledby="ssh">
+  <div class="grab"></div>
+  <h3 id="ssh"><b id="sshT" style="font-weight:600">صيانة</b> <span id="sshcar"></span></h3>
+  <form class="form" id="svForm" novalidate>
+    <label>التاريخ<input type="date" id="sDate"></label>
+    <label>العداد (كم)<input type="number" id="sOdo" inputmode="numeric" min="0" step="1"></label>
+    <label class="full">النوع<input type="text" id="sName" list="mtSug" maxlength="40" autocomplete="off" placeholder="زيت وفلتر"></label>
+    <label>المبلغ / قطع غيار (جنيه)<input type="number" id="sParts" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
+    <label>المصنعية (جنيه)<input type="number" id="sLabor" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
+    <label class="full">ملحوظات<textarea id="sNotes" rows="2" maxlength="300" placeholder="مثلاً: نوع الزيت، اسم الميكانيكي، الضمان…"></textarea></label>
+    <div class="live" id="sLive" style="grid-template-columns:1fr"></div>
+    <div class="err" id="sErr" hidden></div>
+    <button class="btn pri" type="submit" id="sSave">احفظ</button>
+    <button class="btn ghost" type="button" id="sSaveMore">احفظ وزوّد بند تاني في نفس اليوم</button>
+    <button class="btn del" type="button" id="sDel">امسح</button>
+  </form>
+</div>
+
 <div class="sheet" id="mtSheet" role="dialog" aria-modal="true" aria-labelledby="msh">
   <div class="grab"></div>
-  <h3 id="msh"><b id="mshT" style="font-weight:600">صيانة</b> <span id="mshcar"></span></h3>
+  <h3 id="msh"><b id="mshT" style="font-weight:600">تذكير صيانة</b> <span id="mshcar"></span></h3>
   <form class="form" id="mtForm" novalidate>
-    <label class="full">النوع<input type="text" id="mName" list="mtSug" maxlength="30" autocomplete="off" placeholder="تغيير زيت"></label>
-    <datalist id="mtSug"><option value="تغيير زيت"><option value="فلتر زيت"><option value="فلتر هوا"><option value="فلتر بنزين"><option value="بوجيهات"><option value="تيل فرامل"><option value="سير الكاتينة"><option value="ماية الردياتير"></datalist>
+    <label class="full">النوع<input type="text" id="mName" list="mtSug" maxlength="40" autocomplete="off" placeholder="زيت وفلتر"></label>
+    <datalist id="mtSug"></datalist>
     <label>كل كام كم<input type="number" id="mEvery" inputmode="numeric" min="0" step="1" placeholder="5000"></label>
     <label>آخر مرة على عداد<input type="number" id="mLast" inputmode="numeric" min="0" step="1"></label>
-    <p class="hint full">التطبيق بيقارن بآخر قراءة عداد في التفويلات، وينبّهك لما يفضل 10% من المسافة.</p>
+    <p class="hint full">التطبيق بيقارن بآخر قراءة عداد، وينبّهك لما يفضل 10% من المسافة. ولما تسجّل صيانة بنفس الاسم، التذكير بيتحدّث لوحده.</p>
     <div class="err" id="mErr" hidden></div>
     <button class="btn pri" type="submit">احفظ</button>
     <button class="btn del" type="button" id="mDel">امسح</button>
@@ -403,12 +453,13 @@ const DAYS=['الأحد','الاتنين','التلات','الأربع','الخ�
 const iso=d=>{d=new Date(d);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
 const today=()=>iso(new Date());
 const nice=s=>{const d=new Date(s+'T00:00');return `${d.getDate()} ${MONTHS[d.getMonth()]}`};
+const niceY=s=>nice(s)+(s.slice(0,4)===today().slice(0,4)?'':' '+s.slice(0,4));
 const DAY=864e5,G_MIN=4,G_MAX=20,KEY='petrol.v1';
 const band=(v,c)=>{const g=c&&c.good||9,b=c&&c.bad||12;return v<g?['good','استهلاك كويس']:v<b?['warn','استهلاك متوسط']:['bad','استهلاك عالي']};
 const ls=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}};
 const dayW=n=>n>=3&&n<=10?'أيام':'يوم';
 
-let cars=[],fills=[],meta={},current=null,period='all',sel=null,openId=null,armed=null,armedMt=null,armedCar=null,armedMtDel=null,editId=null,carEdit=null,mtEdit=null,mode='money';
+let cars=[],fills=[],services=[],meta={},current=null,period='all',sel=null,openId=null,armed=null,armedCar=null,armedMtDel=null,armedSvDel=null,editId=null,carEdit=null,mtEdit=null,svEdit=null,svAll=false,mode='money';
 try{period=localStorage.getItem('period')||'all';if(localStorage.getItem('mode')==='liters')mode='liters'}catch(_){}
 $('today').textContent=(()=>{const d=new Date();return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`})();
 
@@ -418,14 +469,16 @@ $('today').textContent=(()=>{const d=new Date();return `${DAYS[d.getDay()]} ${d.
 
 const curCar=()=>cars.find(c=>c.id===current);
 const fillsOf=id=>fills.filter(f=>f.car===id).sort((a,b)=>a.odo-b.odo);
-const curOdo=id=>{const f=fillsOf(id);return f.length?f.at(-1).odo:NaN};
+const servicesOf=id=>services.filter(s=>s.car===id).sort((a,b)=>b.date.localeCompare(a.date)||b.odo-a.odo);
+const svTotal=s=>s.parts+s.labor;
+// latest known odometer reading, from fills or services
+const curOdo=id=>{const o=[...fillsOf(id).map(f=>f.odo),...servicesOf(id).map(s=>s.odo)].filter(v=>v>0);return o.length?Math.max(...o):NaN};
 function inPeriod(date){
   if(period==='all')return true;
   if(period==='30'){const d=new Date();d.setDate(d.getDate()-30);return date>=iso(d)}
   return date.slice(0,7)===period;
 }
 const monthName=m=>MONTHS[+m.slice(5)-1]+' '+m.slice(0,4);
-const periodLabel=()=>period==='all'?'كل الفترة':period==='30'?'آخر 30 يوم':monthName(period);
 function periodOptions(){
   const ms=[...new Set(fillsOf(current).map(f=>f.date.slice(0,7)))].sort().reverse();
   return [['all','كل الفترة'],['30','آخر 30 يوم'],...ms.map(m=>[m,monthName(m)])];
@@ -444,8 +497,8 @@ function chain(list){
       anchor=r;L=0;M=0}
     prev=r;return r});
 }
-function stats(id){
-  const rows=chain(fillsOf(id)).filter(r=>inPeriod(r.date)),t=rows.filter(r=>r.seg);
+function stats(id,inRange=inPeriod){
+  const rows=chain(fillsOf(id)).filter(r=>inRange(r.date)),t=rows.filter(r=>r.seg);
   let s=null;
   if(t.length){const km=sum(t,r=>r.seg.km),L=sum(t,r=>r.seg.L),M=sum(t,r=>r.seg.M);
     const days=(new Date(t.at(-1).date)-new Date(t[0].seg.from))/DAY;
@@ -505,7 +558,7 @@ function render(){
       <div><span class="l">لترات</span><span class="v n">${fmt(r.seg.L,2)}</span></div>
       <div><span class="l">كم/لتر</span><span class="v n">${fmt(r.kml)}</span></div>`}else $('detail').hidden=true;}
 
-  renderMonths();renderCompare();renderMaint();renderFills(rows,car);
+  renderMonths();renderMaint();renderFills(rows,car);
   live();
 }
 
@@ -532,11 +585,18 @@ function renderMonths(){
   $('mxl').innerHTML=ms.map(m=>`<span>${many?+m.slice(5)+'/'+m.slice(2,4):MONTHS[+m.slice(5)-1]}</span>`).join('');
 }
 
+// ---- car comparison (settings) with its own date range ----
+let cmpFrom='',cmpTo='';
+function quickRanges(){
+  const t=today(),y=+t.slice(0,4),ago=n=>{const x=new Date();x.setDate(x.getDate()-n);return iso(x)};
+  return [['كل الفترة','',''],['آخر 30 يوم',ago(30),t],['آخر 3 شهور',ago(91),t],['السنة دي',y+'-01-01',t],['السنة اللي فاتت',(y-1)+'-01-01',(y-1)+'-12-31']];
+}
 function renderCompare(){
-  $('cmpCard').hidden=cars.length<2;if(cars.length<2)return;
-  const data=cars.map(c=>({c,...stats(c.id)}));
-  const rows=[['لتر/100 كم',d=>d.s&&d.s.l100,1,-1],['كم/لتر',d=>d.s&&d.s.kml,1,1],['تكلفة الكيلو',d=>d.s&&d.s.epk,2,-1],['اتصرف (ج)',d=>d.spent,0,0],['المسافة (كم)',d=>d.s&&d.s.km,0,0],['تقدير شهري (ج)',d=>d.s&&d.s.month,0,0]];
-  $('cmpp').textContent=periodLabel();
+  $('cmpQuick').innerHTML=quickRanges().map(([l,f,t],i)=>`<button type="button" data-q="${i}" aria-pressed="${f===cmpFrom&&t===cmpTo}">${l}</button>`).join('');
+  $('cmpFrom').value=cmpFrom;$('cmpTo').value=cmpTo;
+  const inR=d=>(!cmpFrom||d>=cmpFrom)&&(!cmpTo||d<=cmpTo);
+  const data=cars.map(c=>{const st=stats(c.id,inR),mt=sum(services.filter(s=>s.car===c.id&&inR(s.date)),svTotal);return {c,...st,mt,all:st.spent+mt}});
+  const rows=[['لتر/100 كم',d=>d.s&&d.s.l100,1,-1],['كم/لتر',d=>d.s&&d.s.kml,1,1],['تكلفة الكيلو',d=>d.s&&d.s.epk,2,-1],['المسافة (كم)',d=>d.s&&d.s.km,0,0],['بنزين (ج)',d=>d.spent,0,0],['صيانة (ج)',d=>d.mt,0,0],['الإجمالي (ج)',d=>d.all,0,0],['بنزين في الشهر (ج)',d=>d.s&&d.s.month,0,0]];
   $('cmp').style.gridTemplateColumns=`minmax(0,1.15fr) repeat(${cars.length},minmax(0,1fr))`;
   let h='<div class="rl"></div>'+data.map(d=>`<div class="hd">${esc(d.c.name)}</div>`).join('');
   rows.forEach(([l,f,dg,dir],i)=>{const vs=data.map(d=>{const v=f(d);return Number.isFinite(v)?v:NaN}),ok=vs.filter(Number.isFinite);
@@ -545,17 +605,29 @@ function renderCompare(){
   $('cmp').innerHTML=h;
 }
 
+const money=v=>`<span class="n">${fmt(v,v%1?2:0)}</span>`;
 function renderMaint(){
   const car=curCar();$('mtCard').hidden=!car;if(!car)return;
-  const cur=curOdo(car.id);
+  const cur=curOdo(car.id),all=servicesOf(car.id);
+  // reminders
+  $('mtWrap').hidden=!car.maint.length;
   $('mtodo').innerHTML=Number.isFinite(cur)?`آخر عداد <span class="n">${fmt(cur,0)}</span>`:'';
-  if(!car.maint.length){$('mts').innerHTML='<p class="empty" style="padding:10px 4px">سجّل مواعيد الصيانة (زي تغيير الزيت)، والتطبيق هيفكّرك لما ميعادها يقرب على حسب العداد.</p>';return}
   const items=car.maint.map(m=>({m,...(Number.isFinite(cur)?mtState(m,cur):{rem:NaN,used:0,st:'good'})})).sort((a,b)=>(a.rem||0)-(b.rem||0));
   $('mts').innerHTML=items.map(({m,rem,used,st})=>`<div class="mt ${st}">
     <button class="mtb" type="button" data-mt="${esc(m.id)}"><span class="nm">${esc(m.name)}</span><span class="sub">كل <span class="n">${fmt(m.every,0)}</span> كم · آخر مرة على <span class="n">${fmt(m.last,0)}</span></span>
       <span class="rem">${!Number.isFinite(rem)?'':rem<=0?`متأخر <span class="n">${fmt(-rem,0)}</span> كم`:`فاضل <span class="n">${fmt(rem,0)}</span> كم`}</span></button>
-    <button class="btn ${armedMt===m.id?'pri':'ghost'} small" type="button" data-done="${esc(m.id)}" ${Number.isFinite(cur)?'':'disabled'}>${armedMt===m.id?`على <span class="n">${fmt(cur,0)}</span>؟`:'اتعملت'}</button>
+    <button class="btn ghost small" type="button" data-done="${esc(m.id)}">اتعملت</button>
     <div class="pb"><i style="width:${(used*100).toFixed(1)}%"></i></div></div>`).join('');
+  // service log for the selected period, grouped by day
+  const sv=all.filter(s=>inPeriod(s.date));
+  $('svTotal').innerHTML=sv.length?`اتصرف ${money(sum(sv,svTotal))} ج`:'';
+  $('svWrap').hidden=!all.length;$('mtEmpty').hidden=!!(all.length||car.maint.length);
+  const groups=[];sv.forEach(s=>{const g=groups.at(-1);if(g&&g.date===s.date){g.items.push(s);g.odo=Math.max(g.odo,s.odo)}else groups.push({date:s.date,odo:s.odo,items:[s]})});
+  const shown=svAll?groups:groups.slice(0,3);
+  $('svs').innerHTML=!sv.length?'<p class="empty" style="padding:8px">مفيش صيانة في الفترة دي.</p>':shown.map(g=>`<div class="svg"><span>${niceY(g.date)}</span>${g.odo?`<small><span class="n">${fmt(g.odo,0)}</span> كم</small>`:''}</div>`
+    +g.items.map(s=>`<button class="sv" type="button" data-sv="${esc(s.id)}"><span>${esc(s.name)}</span><span class="tot">${money(svTotal(s))} ج</span>${s.labor?`<span class="br">${s.parts?`قطع ${money(s.parts)} · `:''}مصنعية ${money(s.labor)}</span>`:''}${s.notes?`<span class="nt">${esc(s.notes)}</span>`:''}</button>`).join('')).join('');
+  $('svMore').hidden=groups.length<=3;
+  $('svMore').textContent=svAll?'اعرض أقل':`اعرض الكل (${sv.length} بند)`;
 }
 
 function renderFills(rows,car){
@@ -648,6 +720,7 @@ function applyTheme(t){ls('theme',t);if(t==='auto')delete document.documentEleme
 function renderSettings(){
   const t=themeNow();$('themeSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
   $('carList').innerHTML=cars.map(c=>`<button class="crow" type="button" data-car="${esc(c.id)}"><span><b>${esc(c.name)}</b><span>سعر اللتر <span class="n">${fmt(c.price,2)}</span> · كويس تحت <span class="n">${fmt(c.good,1)}</span> · عالي من <span class="n">${fmt(c.bad,1)}</span></span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>`).join('');
+  $('cmpSec').hidden=cars.length<2;
   const a=backupAge();
   $('bkNote').innerHTML=(a===null?'لسه ما خدتش نسخة احتياطية. ':`آخر نسخة: ${nice(iso(meta.lastBackup))} (${a?`من <span class="n">${a}</span> ${dayW(a)}`:'النهارده'}). `)+'بياناتك متخزنة على الموبايل ده بس، فاحفظ النسخة في Drive أو واتساب.';
 }
@@ -655,6 +728,11 @@ function openSettings(){renderSettings();openS('setSheet')}
 $('themeSeg').onclick=e=>{const b=e.target.closest('[data-t]');if(b)applyTheme(b.dataset.t)};
 $('carList').onclick=e=>{const b=e.target.closest('[data-car]');if(b)openCar(b.dataset.car)};
 $('addCar').onclick=()=>openCar(null);
+$('cmpOpen').onclick=()=>{renderCompare();openS('cmpSheet')};
+$('cmpBack').onclick=openSettings;
+$('cmpQuick').onclick=e=>{const b=e.target.closest('[data-q]');if(!b)return;[,cmpFrom,cmpTo]=quickRanges()[+b.dataset.q];renderCompare()};
+$('cmpFrom').onchange=()=>{cmpFrom=$('cmpFrom').value;renderCompare()};
+$('cmpTo').onchange=()=>{cmpTo=$('cmpTo').value;renderCompare()};
 
 // ---- car editor ----
 function openCar(id){
@@ -676,17 +754,64 @@ $('carForm').onsubmit=e=>{
 };
 $('cDel').onclick=()=>{
   const c=cars.find(x=>x.id===carEdit);if(!c||cars.length<2)return;
-  const n=fills.filter(f=>f.car===c.id).length;
-  if(armedCar!==c.id){armedCar=c.id;$('cDel').classList.add('sure');$('cDel').textContent=n?`هيتمسح معاها ${n} تفويلة. متأكد؟`:'متأكد؟ امسح';return}
-  cars=cars.filter(x=>x.id!==c.id);fills=fills.filter(f=>f.car!==c.id);
+  const n=fills.filter(f=>f.car===c.id).length,ns=services.filter(s=>s.car===c.id).length;
+  if(armedCar!==c.id){armedCar=c.id;$('cDel').classList.add('sure');$('cDel').textContent=n||ns?`هيتمسح معاها ${n} تفويلة و${ns} صيانة. متأكد؟`:'متأكد؟ امسح';return}
+  cars=cars.filter(x=>x.id!==c.id);fills=fills.filter(f=>f.car!==c.id);services=services.filter(s=>s.car!==c.id);
   if(current===c.id){current=null;pickCar()}
   save();render();openSettings();toast('العربية اتمسحت');
 };
 
-// ---- maintenance ----
+// ---- maintenance: service log ----
+const SV_NAMES=['زيت وفلتر','فلتر هوا','فلتر بنزين','فلتر تكييف','بوجيهات','سير دينامو','سير كاتينة','تيل أمامي','تيل خلفي','طنابير','رشاشات','بطارية','كاوتش','ماية ردياتير','زيت فتيس'];
+function fillSug(){const ns=[...new Set([...services.map(s=>s.name),...cars.flatMap(c=>c.maint.map(m=>m.name)),...SV_NAMES])];
+  $('mtSug').innerHTML=ns.map(n=>`<option value="${esc(n)}">`).join('')}
+function svLive(){const t=(Number($('sParts').value)||0)+(Number($('sLabor').value)||0);
+  $('sLive').innerHTML=`<div><span class="l">الإجمالي</span><span class="v">${money(t)} جنيه</span></div>`}
+function openSvc(id,pre){
+  const car=curCar();if(!car)return;
+  const s=id?services.find(x=>x.id===id):null,p=s||pre||{};svEdit=s?s.id:null;armedSvDel=null;
+  $('sshT').textContent=s?'تعديل صيانة':'سجّل صيانة';$('sshcar').textContent=car.name;
+  $('sDate').value=p.date||today();$('sOdo').value=p.odo||'';$('sName').value=p.name||'';
+  $('sParts').value=s&&s.parts?s.parts:'';$('sLabor').value=s&&s.labor?s.labor:'';$('sNotes').value=s?s.notes:'';
+  const cur=curOdo(car.id);$('sOdo').placeholder=Number.isFinite(cur)?String(cur):'';
+  $('sErr').hidden=true;$('sSaveMore').hidden=!!s;$('sDel').hidden=!s;$('sDel').className='btn del';$('sDel').textContent='امسح';
+  fillSug();svLive();openS('svSheet');
+  if(!s)setTimeout(()=>$(p.name?'sParts':'sName').focus(),250);
+}
+function saveSvc(more){
+  const car=curCar(),fail=t=>{$('sErr').textContent=t;$('sErr').hidden=false};$('sErr').hidden=true;
+  const date=$('sDate').value,odo=Number($('sOdo').value)||0,name=$('sName').value.trim(),parts=Number($('sParts').value)||0,labor=Number($('sLabor').value)||0,notes=$('sNotes').value.trim();
+  if(!car)return;
+  if(!date)return fail('اكتب التاريخ.');
+  if(!name)return fail('اكتب نوع الصيانة.');
+  if(parts<0||labor<0)return fail('المبالغ لازم تكون موجبة.');
+  const rec={car:car.id,date,odo,name,parts:r2(parts),labor:r2(labor),notes};
+  if(svEdit)Object.assign(services.find(s=>s.id===svEdit),rec);
+  else services.push({...rec,id:'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)});
+  // a reminder with the same name restarts from this service
+  let msg=svEdit?'اتعدّلت':'اتسجّلت';
+  const m=car.maint.find(m=>m.name.trim()===name);
+  if(m&&odo>m.last){m.last=odo;msg+=` · تذكير ${m.name} اتحدّث`}
+  if(!save())return;render();toast(msg);
+  if(more){$('sName').value='';$('sParts').value='';$('sLabor').value='';$('sNotes').value='';svLive();fillSug();$('sName').focus();return}
+  svEdit=null;closeS();
+}
+$('svForm').onsubmit=e=>{e.preventDefault();saveSvc(false)};
+$('sSaveMore').onclick=()=>saveSvc(true);
+['sParts','sLabor'].forEach(id=>$(id).addEventListener('input',svLive));
+$('sDel').onclick=()=>{
+  if(!svEdit)return;
+  if(armedSvDel!==svEdit){armedSvDel=svEdit;$('sDel').classList.add('sure');$('sDel').textContent='متأكد؟ امسح';return}
+  services=services.filter(s=>s.id!==svEdit);svEdit=null;save();closeS();render();toast('اتمسحت');
+};
+$('svAdd').onclick=()=>openSvc(null);
+$('svs').onclick=e=>{const b=e.target.closest('[data-sv]');if(b)openSvc(b.dataset.sv)};
+$('svMore').onclick=()=>{svAll=!svAll;renderMaint()};
+
+// ---- maintenance: reminders ----
 function openMt(id){
   const car=curCar();if(!car)return;const m=id?car.maint.find(x=>x.id===id):null;mtEdit=m?m.id:null;armedMtDel=null;
-  $('mshT').textContent=m?'تعديل صيانة':'صيانة جديدة';$('mshcar').textContent=car.name;
+  $('mshT').textContent=m?'تعديل تذكير':'تذكير صيانة';$('mshcar').textContent=car.name;fillSug();
   const cur=curOdo(car.id);
   $('mName').value=m?m.name:'';$('mEvery').value=m?m.every:'';$('mLast').value=m?m.last:(Number.isFinite(cur)?cur:'');
   $('mErr').hidden=true;$('mDel').hidden=!m;$('mDel').className='btn del';$('mDel').textContent='امسح';
@@ -710,14 +835,13 @@ $('mDel').onclick=()=>{
 };
 $('mts').onclick=e=>{
   const d=e.target.closest('[data-done]');
-  if(d){const car=curCar(),m=car.maint.find(x=>x.id===d.dataset.done),cur=curOdo(car.id);if(!m||!Number.isFinite(cur))return;
-    if(armedMt!==m.id){armedMt=m.id;renderMaint();return}
-    m.last=cur;armedMt=null;save();render();toast(`${m.name}: اتسجّلت على ${fmt(cur,0)}`);return}
-  const b=e.target.closest('[data-mt]');if(b){armedMt=null;openMt(b.dataset.mt)}
+  if(d){const car=curCar(),m=car.maint.find(x=>x.id===d.dataset.done),cur=curOdo(car.id);if(!m)return;
+    openSvc(null,{name:m.name,odo:Number.isFinite(cur)?cur:'',date:today()});return}
+  const b=e.target.closest('[data-mt]');if(b)openMt(b.dataset.mt);
 };
 
 // ---- main screen events ----
-$('cars').onclick=e=>{const b=e.target.closest('[data-id]');if(!b)return;current=b.dataset.id;sel=openId=armed=armedMt=null;ls('car',current);render()};
+$('cars').onclick=e=>{const b=e.target.closest('[data-id]');if(!b)return;current=b.dataset.id;sel=openId=armed=null;svAll=false;ls('car',current);render()};
 $('periods').onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;period=b.dataset.p;sel=null;ls('period',period);render()};
 $('chart').onclick=e=>{const b=e.target.closest('[data-bar]');if(!b)return;sel=sel===b.dataset.bar?null:b.dataset.bar;render()};
 $('mchart').onclick=e=>{const b=e.target.closest('[data-month]');if(!b)return;period=period===b.dataset.month?'all':b.dataset.month;sel=null;ls('period',period);render()};
@@ -753,21 +877,59 @@ function normalize(d){
     maint:Array.isArray(c.maint)?c.maint.map(m=>({id:String(m.id),name:String(m.name),every:Number(m.every)||0,last:Number(m.last)||0})).filter(m=>m.every>0):[]}));
   const fs=(Array.isArray(d.fills)?d.fills:[]).map(f=>{const c=cs.find(c=>c.id===f.car);if(!c)return null;
     return {id:String(f.id),car:c.id,date:String(f.date),odo:Number(f.odo),money:Number(f.money),price:Number(f.price)>0?Number(f.price):c.price,full:f.full!==false}}).filter(Boolean);
-  return {cars:cs.sort((a,b)=>a.order-b.order),fills:fs};
+  const sv=(Array.isArray(d.services)?d.services:[]).map(s=>{const c=cs.find(c=>c.id===s.car);if(!c)return null;
+    return {id:String(s.id),car:c.id,date:String(s.date),odo:Number(s.odo)||0,name:String(s.name||''),parts:Number(s.parts)||0,labor:Number(s.labor)||0,notes:String(s.notes||'')}}).filter(Boolean);
+  return {cars:cs.sort((a,b)=>a.order-b.order),fills:fs,services:sv};
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify({v:2,cars,fills,lastBackup:meta.lastBackup||null,snooze:meta.snooze||null}));return true}catch(_){toast('مساحة التخزين مش متاحة');return false}}
+// Maintenance history brought over from the Car Notes app; added once per car.
+// rows: [date, odometer, name, parts, labor]
+const SEED_SV={
+  'carnotes-aveo':{car:/aveo/i,rows:[
+    ['2026-09-26',40450,'تغيير رشاشات',2600,500],
+    ['2026-09-11',40000,'سلوك بوجيهات',350,0],['2026-09-11',40000,'طقم بوجيهات',450,0],['2026-09-11',40000,'سير دينامو',450,0],
+    ['2026-09-11',40000,'سير كاتينة',1050,0],['2026-09-11',40000,'زيت وفلتر',1300,0],['2026-09-11',40000,'فلتر هوا',120,0],
+    ['2026-06-01',38600,'تيل أمامي',600,0],['2026-06-01',38600,'طنابير أمامي',1600,300]]},
+  'carnotes-astra':{car:/astra/i,rows:[
+    ['2026-09-21',281000,'حساس MAF',2300,0],
+    ['2026-09-09',280000,'زيت وفلتر',2330,100],
+    ['2026-08-07',278000,'تنظيف علبة البيئة',1600,0],['2026-08-07',278000,'بوجيهات بوش',1200,300],
+    ['2026-04-27',270000,'تغيير زيت',1900,0],
+    ['2025-11-24',261000,'موبينة وبوجيهات',3400,0],
+    ['2025-11-21',260000,'بارات دريكسيون خارجية',1500,0],['2025-11-21',260000,'طقم تيش ميزان',2500,0],['2025-11-21',260000,'زيت وفلتر',2400,0],
+    ['2025-08-02',250000,'زيت فتيس',2750,0],['2025-08-02',250000,'فلتر تكييف',300,0],['2025-08-02',250000,'فلتر هوا',600,0],
+    ['2025-08-02',250000,'قاعدة موتور + 2 قاعدة فتيس',8000,0],['2025-08-02',250000,'طنابير أمامي',2500,0],['2025-08-02',250000,'طنابير خلفي',2500,0],
+    ['2025-08-02',250000,'تيل خلفي',1300,0],['2025-08-02',250000,'تيل أمامي',1300,0],['2025-08-02',250000,'مجموعة سير كاتينة',5000,0],
+    ['2025-06-19',250000,'زيت وفلتر',2200,0],
+    ['2025-06-18',250000,'تغيير كاوتش',15000,0],
+    ['2025-01-08',240000,'بطارية Varta',4750,0],['2025-01-08',240000,'زيت وفلتر',2000,250],
+    ['2024-03-01',211000,'زيت وفلتر',2500,100],
+    ['2022-06-06',145750,'فلتر هوا',250,0],['2022-06-06',145750,'سير دينامو',350,0],['2022-06-06',145750,'مجموعة سير كاتينة',2000,400],
+    ['2022-06-01',145000,'موبينة',1300,0],['2022-06-01',145000,'بوجيهات',600,50],
+    ['2022-05-12',142000,'فلتر تكييف',140,0],['2022-05-12',142000,'زيت وفلتر',860,0],
+    ['2022-02-05',132000,'زيت وفلتر',850,0],
+    ['2022-01-12',131000,'موبينة',1050,100],
+    ['2021-10-02',122000,'زيت فتيس',750,50],['2021-10-02',122000,'بوجيهات',750,50],['2021-10-02',122000,'فلتر هوا',250,50],['2021-10-02',122000,'زيت وفلتر',900,50]]}};
+function runSeeds(){
+  Object.entries(SEED_SV).forEach(([k,{car,rows}])=>{
+    if(meta.seeded.includes(k))return;
+    const c=cars.find(c=>car.test(c.id)||car.test(c.name));if(!c)return;
+    rows.forEach(([date,odo,name,parts,labor],i)=>{const id=k+'-'+i;if(!services.some(s=>s.id===id))services.push({id,car:c.id,date,odo,name,parts,labor,notes:''})});
+    meta.seeded.push(k)});
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({v:2,cars,fills,services,seeded:meta.seeded||[],lastBackup:meta.lastBackup||null,snooze:meta.snooze||null}));return true}catch(_){toast('مساحة التخزين مش متاحة');return false}}
 function pickCar(){let saved=null;try{saved=localStorage.getItem('car')}catch(_){}
   if(!cars.some(c=>c.id===current))current=cars.some(c=>c.id===saved)?saved:(cars[0]&&cars[0].id)||null}
 function load(){let d=null;try{d=JSON.parse(localStorage.getItem(KEY))}catch(_){}
   if(!d||!Array.isArray(d.cars))d=JSON.parse(JSON.stringify(SEED));
-  const n=normalize(d);cars=n.cars;fills=n.fills;meta={lastBackup:d.lastBackup||null,snooze:d.snooze||null};
-  save();pickCar();render()}
+  const n=normalize(d);cars=n.cars;fills=n.fills;services=n.services;
+  meta={lastBackup:d.lastBackup||null,snooze:d.snooze||null,seeded:Array.isArray(d.seeded)?d.seeded:[]};
+  runSeeds();save();pickCar();render()}
 load();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 
 // ---- backup / restore ----
 async function doBackup(){
-  const json=JSON.stringify({app:'petrol',v:2,exported:new Date().toISOString(),cars,fills},null,1),name=`petrol-backup-${today()}.json`;
+  const json=JSON.stringify({app:'petrol',v:2,exported:new Date().toISOString(),cars,fills,services,seeded:meta.seeded},null,1),name=`petrol-backup-${today()}.json`;
   const done=t=>{meta.lastBackup=Date.now();meta.snooze=null;save();render();renderSettings();toast(t)};
   try{const file=new File([json],name,{type:'application/json'});
     if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'نسخة احتياطية - دفتر البنزين'});done('النسخة الاحتياطية اتبعتت');return}
@@ -778,7 +940,8 @@ async function doBackup(){
 $('exportBtn').onclick=doBackup;
 $('importFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(!Array.isArray(d.cars)||!Array.isArray(d.fills))throw 0;
-    const n=normalize(d);cars=n.cars;fills=n.fills;current=null;sel=openId=armed=null;pickCar();save();render();closeS();toast(`اترجّع ${fills.length} تفويلة`)}
+    const n=normalize(d);cars=n.cars;fills=n.fills;services=n.services;meta.seeded=Array.isArray(d.seeded)?d.seeded:[];runSeeds();
+    current=null;sel=openId=armed=null;pickCar();save();render();closeS();toast(`اترجّع ${fills.length} تفويلة و${services.length} صيانة`)}
   catch(_){toast('الملف ده مش نسخة احتياطية من الدفتر')}};
 
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
