@@ -1,5 +1,5 @@
 // Petrol offline cache. Bump VERSION when files change.
-const VERSION = 'petrol-v4';
+const VERSION = 'petrol-v5';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
@@ -11,6 +11,8 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  // only the app's own files and its fonts are cached; the GitHub sync API must always hit the network
+  if (url.origin !== location.origin && !/(^|\.)(googleapis|gstatic)\.com$/.test(url.hostname)) return;
   // app page: network first so updates arrive, cache when offline
   if (req.mode === 'navigate') {
     e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(VERSION).then(x => x.put('index.html', c)); return r; })

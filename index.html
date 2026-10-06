@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Petrol">
-<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(_){}</script>
+<script>var LANG='ar';try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;if(localStorage.getItem('lang')==='en'){LANG='en';document.documentElement.lang='en';document.documentElement.dir='ltr'}}catch(_){}</script>
 <style>html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap">
@@ -140,6 +140,10 @@ h1{font-family:var(--f-display);font-weight:700;font-size:22px;margin:0}
 .sv .br{grid-column:2;font-size:11.5px;color:var(--muted);text-align:end}
 .sv .nt{grid-column:1/-1;font-size:12px;color:var(--muted);white-space:pre-line}
 #svMore{margin-top:8px}
+.steps{margin:0 0 14px;padding-inline-start:20px;font-size:13.5px;color:var(--muted);display:grid;gap:6px}
+.steps b{color:var(--ink)}
+html[dir=ltr] input[type=number]{text-align:left}
+html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .welcome{display:grid;gap:12px}
 .welcome h2{font-size:17px;margin:0}
 .welcome p{margin:0;color:var(--muted);font-size:14px}
@@ -299,6 +303,7 @@ html{padding-top:0}
     <p>ابدأ بإضافة عربيتك، وبعدها سجّل كل تفويلة والتطبيق هيحسبلك الاستهلاك وتكلفة الكيلو. بياناتك بتتخزن على موبايلك ده بس، ومحدش غيرك بيشوفها.</p>
     <button class="btn pri wide" type="button" id="wAdd">+ زوّد عربيتك</button>
     <label class="btn ghost wide filebtn" style="text-align:center">عندي نسخة احتياطية، رجّعها<input type="file" id="wImport" accept=".json,application/json"></label>
+    <button class="btn ghost wide" type="button" id="wSync">بياناتي على GitHub، اربطها</button>
   </section>
 
   <nav class="periods" id="periods" aria-label="الفترة"></nav>
@@ -388,6 +393,14 @@ html{padding-top:0}
   <div class="sec">
     <h4>المظهر</h4>
     <div class="seg mini" id="themeSeg" style="--cols:3"><button type="button" data-t="auto">زي الموبايل</button><button type="button" data-t="light">فاتح</button><button type="button" data-t="dark">داكن</button></div>
+    <h4 style="margin-top:14px">اللغة · Language</h4>
+    <div class="seg mini" id="langSeg" style="--cols:2" data-user><button type="button" data-l="ar" lang="ar">العربية</button><button type="button" data-l="en" lang="en">English</button></div>
+  </div>
+  <div class="sec">
+    <h4>المزامنة التلقائية</h4>
+    <p class="mnote" id="syNote"></p>
+    <div class="mbtns" id="syOff"><button class="btn pri" type="button" id="syOpen">اربط بـ GitHub</button></div>
+    <div class="twobtn" id="syOn" hidden style="margin-top:0"><button class="btn ghost small" type="button" id="syNow">زامن دلوقتي</button><button class="btn del" type="button" id="syStop">افصل</button></div>
   </div>
   <div class="sec">
     <h4>العربيات</h4>
@@ -437,6 +450,23 @@ html{padding-top:0}
   </div>
   <div class="cmp" id="cmp"></div>
   <p class="note">الأخضر هو الأحسن. الاستهلاك بيتحسب من التفويلات اللي في الفترة دي بس.</p>
+</div>
+
+<div class="sheet" id="sySheet" role="dialog" aria-modal="true" aria-labelledby="syh">
+  <div class="grab"></div>
+  <h3><b id="syh" style="font-weight:600">المزامنة مع GitHub</b><button class="btn ghost small" type="button" id="syBack">رجوع</button></h3>
+  <ol class="steps">
+    <li>اعمل ريبو جديد على GitHub وخليه <b>Private</b>، مثلاً باسم <span class="n">petrol-data</span>.</li>
+    <li>من <span class="n">Settings → Developer settings → Fine-grained tokens</span> اعمل توكن للريبو ده بس، بصلاحية <span class="n">Contents: Read and write</span>.</li>
+    <li>اكتب اسم الريبو والصق التوكن هنا. على أي موبايل تاني اعمل نفس الخطوة دي بنفس التوكن.</li>
+  </ol>
+  <form class="form" id="syForm" novalidate>
+    <label class="full">الريبو<input type="text" id="syRepo" dir="ltr" placeholder="username/petrol-data" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <label class="full">التوكن<input type="password" id="syTok" dir="ltr" placeholder="github_pat_…" autocomplete="off"></label>
+    <p class="hint full">التوكن بيتحفظ على الموبايل ده بس، ومش بيتحط في النسخة الاحتياطية.</p>
+    <div class="err" id="syErr" hidden></div>
+    <button class="btn pri" type="submit" id="syGo">اربط وزامن</button>
+  </form>
 </div>
 
 <div class="sheet" id="refSheet" role="dialog" aria-modal="true" aria-labelledby="rfh">
@@ -493,8 +523,9 @@ const fmt=(n,d=1)=>Number.isFinite(n)?n.toLocaleString('en-US',{minimumFractionD
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const r2=n=>Math.round(n*100)/100;
 const sum=(a,f)=>a.reduce((x,r)=>x+f(r),0);
-const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-const DAYS=['الأحد','الاتنين','التلات','الأربع','الخميس','الجمعة','السبت'];
+const MONTHS=LANG==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const DAYS=LANG==='en'?['Sun','Mon','Tue','Wed','Thu','Fri','Sat']:['الأحد','الاتنين','التلات','الأربع','الخميس','الجمعة','السبت'];
+if(LANG==='en')$('root').dir='ltr';
 const iso=d=>{d=new Date(d);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
 const today=()=>iso(new Date());
 const nice=s=>{const d=new Date(s+'T00:00');return `${d.getDate()} ${MONTHS[d.getMonth()]}`};
@@ -556,7 +587,7 @@ function mtState(m,cur){
   return {rem,used,st:rem<=0?'bad':rem<=m.every*.1?'warn':'good'};
 }
 const backupAge=()=>meta.lastBackup?Math.floor((Date.now()-meta.lastBackup)/DAY):null;
-const backupDue=()=>fills.length&&(!meta.lastBackup||Date.now()-meta.lastBackup>14*DAY)&&!(meta.snooze&&Date.now()-meta.snooze<3*DAY);
+const backupDue=()=>!(syncOn()&&!syncErr)&&fills.length&&(!meta.lastBackup||Date.now()-meta.lastBackup>14*DAY)&&!(meta.snooze&&Date.now()-meta.snooze<3*DAY);
 
 function render(){
   document.body.classList.toggle('nocar',!cars.length);$('welcome').hidden=!!cars.length;
@@ -614,6 +645,7 @@ function renderAlerts(){
   cars.forEach(c=>{const cur=curOdo(c.id);if(!Number.isFinite(cur))return;
     c.maint.forEach(m=>{const {rem,st}=mtState(m,cur);if(st==='good')return;
       out.push(`<div class="banner ${st}"><span>${st==='bad'?'جه ميعاد':'قرّب ميعاد'} <b>${esc(m.name)}</b> · ${esc(c.name)} — ${rem<=0?`متأخر <span class="n">${fmt(-rem,0)}</span> كم`:`فاضل <span class="n">${fmt(rem,0)}</span> كم`}</span><button class="btn ghost small" type="button" data-gocar="${esc(c.id)}">شوف</button></div>`)})});
+  if(syncOn()&&syncErr&&meta.sync.dirty)out.push(`<div class="banner warn"><span>التعديلات لسه ما اترفعتش على GitHub: ${syncErr}.</span><button class="btn ghost small" type="button" data-sy="1">جرّب تاني</button></div>`);
   if(backupDue()){const a=backupAge();
     out.push(`<div class="banner"><span>${a===null?'لسه ما خدتش نسخة احتياطية من بياناتك.':`آخر نسخة احتياطية من <span class="n">${a}</span> ${dayW(a)}.`}</span><span class="bact"><button class="btn pri small" type="button" data-bk="now">خد نسخة</button><button class="btn ghost small" type="button" data-bk="later">بعدين</button></span></div>`)}
   $('alerts').innerHTML=out.join('');
@@ -752,13 +784,13 @@ $('fillForm').onsubmit=e=>{
   if(!v.date||!(v.odo>0)||!(v.money>0))return fail(`اكتب التاريخ والعداد و${mode==='liters'?'اللترات':'المبلغ'}.`);
   if(!(v.price>0))return fail('اكتب سعر اللتر.');
   if(fillsOf(current).some(f=>f.odo===v.odo&&f.id!==editId))return fail('في تفويلة متسجلة بنفس قراءة العداد.');
-  const rec={car:current,date:v.date,odo:v.odo,money:r2(v.money),price:v.price,full:v.full},wasEdit=!!editId;
+  const rec={car:current,date:v.date,odo:v.odo,money:r2(v.money),price:v.price,full:v.full,u:Date.now()},wasEdit=!!editId;
   if(editId)Object.assign(fills.find(f=>f.id===editId),rec);
   else{rec.id='f'+Date.now().toString(36);fills.push(rec)}
   // the newest fill's price becomes the car's current price
   let msg=wasEdit?'اتعدّلت':'اتسجّلت';
   const newest=fillsOf(current).at(-1);
-  if(newest&&newest.odo===v.odo&&v.price!==car.price){car.price=v.price;msg+=` · سعر اللتر بقى ${fmt(v.price,2)}`}
+  if(newest&&newest.odo===v.odo&&v.price!==car.price){car.price=v.price;car.u=Date.now();msg+=` · سعر اللتر بقى ${fmt(v.price,2)}`}
   if(!save())return;
   editId=null;if(!wasEdit)openId=null;armed=null;closeS();render();toast(msg);
 };
@@ -769,12 +801,14 @@ function applyTheme(t){ls('theme',t);if(t==='auto')delete document.documentEleme
 function renderSettings(){
   const t=themeNow();$('themeSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
   $('carList').innerHTML=cars.map(c=>`<button class="crow" type="button" data-car="${esc(c.id)}"><span><b>${esc(c.name)}</b><span>سعر اللتر <span class="n">${fmt(c.price,2)}</span> · كويس تحت <span class="n">${fmt(c.good,1)}</span> · عالي من <span class="n">${fmt(c.bad,1)}</span></span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>`).join('');
-  $('cmpSec').hidden=cars.length<2;
+  $('cmpSec').hidden=cars.length<2;renderSync();
+  $('langSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===LANG));
   const a=backupAge();
   $('bkNote').innerHTML=(a===null?'لسه ما خدتش نسخة احتياطية. ':`آخر نسخة: ${nice(iso(meta.lastBackup))} (${a?`من <span class="n">${a}</span> ${dayW(a)}`:'النهارده'}). `)+'بياناتك متخزنة على الموبايل ده بس، فاحفظ النسخة في Drive أو واتساب.';
 }
 function openSettings(){renderSettings();openS('setSheet')}
 $('themeSeg').onclick=e=>{const b=e.target.closest('[data-t]');if(b)applyTheme(b.dataset.t)};
+$('langSeg').onclick=e=>{const b=e.target.closest('[data-l]');if(b&&b.dataset.l!==LANG){ls('lang',b.dataset.l);location.reload()}};
 $('carList').onclick=e=>{const b=e.target.closest('[data-car]');if(b)openCar(b.dataset.car)};
 $('addCar').onclick=()=>openCar(null);
 $('cmpOpen').onclick=()=>{renderCompare();openS('cmpSheet')};
@@ -797,8 +831,8 @@ $('carForm').onsubmit=e=>{
   if(!name)return fail('اكتب اسم العربية.');
   if(!(price>0))return fail('اكتب سعر اللتر.');
   if(!(good>0)||!(bad>good))return fail('حد «عالي» لازم يكون أكبر من حد «كويس».');
-  if(carEdit)Object.assign(cars.find(c=>c.id===carEdit),{name,price,good,bad});
-  else{const id='c'+Date.now().toString(36);cars.push({id,name,price,good,bad,order:Math.max(0,...cars.map(c=>c.order||0))+1,maint:[]});current=id;ls('car',id);sel=openId=null}
+  if(carEdit)Object.assign(cars.find(c=>c.id===carEdit),{name,price,good,bad,u:Date.now()});
+  else{const id='c'+Date.now().toString(36);cars.push({id,name,price,good,bad,u:Date.now(),order:Math.max(0,...cars.map(c=>c.order||0))+1,maint:[]});current=id;ls('car',id);sel=openId=null}
   if(!save())return;render();
   if(cars.length===1&&!carEdit)closeS();else openSettings();   // first car from the welcome card → straight to the app
   toast(carEdit?'العربية اتعدّلت':'العربية اتضافت');
@@ -808,13 +842,13 @@ $('cDel').onclick=()=>{
   const c=cars.find(x=>x.id===carEdit);if(!c||cars.length<2)return;
   const n=fills.filter(f=>f.car===c.id).length,ns=services.filter(s=>s.car===c.id).length;
   if(armedCar!==c.id){armedCar=c.id;$('cDel').classList.add('sure');$('cDel').textContent=n||ns?`هيتمسح معاها ${n} تفويلة و${ns} صيانة. متأكد؟`:'متأكد؟ امسح';return}
-  cars=cars.filter(x=>x.id!==c.id);fills=fills.filter(f=>f.car!==c.id);services=services.filter(s=>s.car!==c.id);
+  del(c.id);cars=cars.filter(x=>x.id!==c.id);fills=fills.filter(f=>f.car!==c.id);services=services.filter(s=>s.car!==c.id);
   if(current===c.id){current=null;pickCar()}
   save();render();openSettings();toast('العربية اتمسحت');
 };
 
 // ---- maintenance: service log ----
-const SV_NAMES=['زيت وفلتر','فلتر هوا','فلتر بنزين','فلتر تكييف','بوجيهات','سير دينامو','سير كاتينة','تيل أمامي','تيل خلفي','طنابير','رشاشات','بطارية','كاوتش','ماية ردياتير','زيت فتيس'];
+const SV_NAMES=LANG==='en'?['Oil & filter','Air filter','Fuel filter','A/C filter','Spark plugs','Alternator belt','Timing belt','Front brake pads','Rear brake pads','Brake discs','Injectors','Battery','Tires','Coolant','Gearbox oil']:['زيت وفلتر','فلتر هوا','فلتر بنزين','فلتر تكييف','بوجيهات','سير دينامو','سير كاتينة','تيل أمامي','تيل خلفي','طنابير','رشاشات','بطارية','كاوتش','ماية ردياتير','زيت فتيس'];
 function fillSug(){const ns=[...new Set([...services.map(s=>s.name),...cars.flatMap(c=>c.maint.map(m=>m.name)),...SV_NAMES])];
   $('mtSug').innerHTML=ns.map(n=>`<option value="${esc(n)}">`).join('')}
 function svLive(){const t=(Number($('sParts').value)||0)+(Number($('sLabor').value)||0);
@@ -838,13 +872,13 @@ function saveSvc(more){
   if(!date)return fail('اكتب التاريخ.');
   if(!name)return fail('اكتب نوع الصيانة.');
   if(parts<0||labor<0)return fail('المبالغ لازم تكون موجبة.');
-  const rec={car:car.id,date,odo,name,parts:r2(parts),labor:r2(labor),notes};
+  const rec={car:car.id,date,odo,name,parts:r2(parts),labor:r2(labor),notes,u:Date.now()};
   if(svEdit)Object.assign(services.find(s=>s.id===svEdit),rec);
   else services.push({...rec,id:'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)});
   // a reminder with the same name restarts from this service
   let msg=svEdit?'اتعدّلت':'اتسجّلت';
   const m=car.maint.find(m=>m.name.trim()===name);
-  if(m&&odo>m.last){m.last=odo;msg+=` · تذكير ${m.name} اتحدّث`}
+  if(m&&odo>m.last){m.last=odo;car.u=Date.now();msg+=` · تذكير ${m.name} اتحدّث`}
   if(!save())return;render();toast(msg);
   if(more){$('sName').value='';$('sParts').value='';$('sLabor').value='';$('sNotes').value='';svLive();fillSug();$('sName').focus();return}
   svEdit=null;svDone();
@@ -857,7 +891,7 @@ $('sSaveMore').onclick=()=>saveSvc(true);
 $('sDel').onclick=()=>{
   if(!svEdit)return;
   if(armedSvDel!==svEdit){armedSvDel=svEdit;$('sDel').classList.add('sure');$('sDel').textContent='متأكد؟ امسح';return}
-  services=services.filter(s=>s.id!==svEdit);svEdit=null;save();render();svDone();toast('اتمسحت');
+  del(svEdit);services=services.filter(s=>s.id!==svEdit);svEdit=null;save();render();svDone();toast('اتمسحت');
 };
 
 // ---- maintenance reference (settings): every service, by type or by date, searchable ----
@@ -914,12 +948,12 @@ $('mtForm').onsubmit=e=>{
   if($('mLast').value===''||!(last>=0))return fail('اكتب العداد آخر مرة اتعملت.');
   if(mtEdit)Object.assign(car.maint.find(m=>m.id===mtEdit),{name,every,last});
   else car.maint.push({id:'m'+Date.now().toString(36),name,every,last});
-  if(!save())return;closeS();render();toast('اتحفظت');
+  car.u=Date.now();if(!save())return;closeS();render();toast('اتحفظت');
 };
 $('mDel').onclick=()=>{
   const car=curCar();if(!car||!mtEdit)return;
   if(armedMtDel!==mtEdit){armedMtDel=mtEdit;$('mDel').classList.add('sure');$('mDel').textContent='متأكد؟ امسح';return}
-  car.maint=car.maint.filter(m=>m.id!==mtEdit);save();closeS();render();toast('اتمسحت');
+  car.maint=car.maint.filter(m=>m.id!==mtEdit);car.u=Date.now();save();closeS();render();toast('اتمسحت');
 };
 $('mts').onclick=e=>{
   const d=e.target.closest('[data-done]');
@@ -937,18 +971,19 @@ $('fills').onclick=e=>{
   const ed=e.target.closest('[data-edit]');if(ed){openFill(ed.dataset.edit);return}
   const d=e.target.closest('[data-del]');
   if(d){const id=d.dataset.del;if(armed!==id){armed=id;render();return}
-    armed=openId=null;fills=fills.filter(f=>f.id!==id);save();render();toast('اتمسحت');return}
+    armed=openId=null;del(id);fills=fills.filter(f=>f.id!==id);save();render();toast('اتمسحت');return}
   const o=e.target.closest('[data-open]');if(!o)return;openId=openId===o.dataset.open?null:o.dataset.open;armed=null;render();
 };
 $('alerts').onclick=e=>{
   const g=e.target.closest('[data-gocar]');
   if(g){current=g.dataset.gocar;ls('car',current);sel=openId=armed=null;render();$('mtCard').scrollIntoView({behavior:'smooth',block:'center'});return}
+  if(e.target.closest('[data-sy]')){sync();return}
   const b=e.target.closest('[data-bk]');if(!b)return;
-  if(b.dataset.bk==='now')doBackup();else{meta.snooze=Date.now();save();render()}
+  if(b.dataset.bk==='now')doBackup();else{meta.snooze=Date.now();store();render()}
 };
 $('priceBtn').onclick=()=>{const p=$('priceEdit');p.hidden=!p.hidden;if(!p.hidden){$('price').value=curCar()?.price??'';$('price').focus()}};
 $('savePrice').onclick=()=>{const p=Number($('price').value),car=curCar();if(!car||!(p>0))return;
-  car.price=p;if(save()){render();$('priceEdit').hidden=true;toast('السعر اتحفظ للتفويلات الجاية')}};
+  car.price=p;car.u=Date.now();if(save()){render();$('priceEdit').hidden=true;toast('السعر اتحفظ للتفويلات الجاية')}};
 $('fab').onclick=()=>openFill(null);
 $('setBtn').onclick=openSettings;
 $('scrim').onclick=closeS;
@@ -957,12 +992,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeS()});
 // ---- storage (data lives on this phone) ----
 // v1 data had one price per car and no full/partial flag: old fills take the car's price and count as full tanks.
 function normalize(d){
-  const cs=d.cars.map(c=>({id:String(c.id),name:String(c.name||'عربية'),price:Number(c.price)||0,order:Number(c.order)||0,good:Number(c.good)||9,bad:Number(c.bad)||12,
+  const cs=d.cars.map(c=>({id:String(c.id),name:String(c.name||'عربية'),price:Number(c.price)||0,order:Number(c.order)||0,good:Number(c.good)||9,bad:Number(c.bad)||12,u:Number(c.u)||0,
     maint:Array.isArray(c.maint)?c.maint.map(m=>({id:String(m.id),name:String(m.name),every:Number(m.every)||0,last:Number(m.last)||0})).filter(m=>m.every>0):[]}));
   const fs=(Array.isArray(d.fills)?d.fills:[]).map(f=>{const c=cs.find(c=>c.id===f.car);if(!c)return null;
-    return {id:String(f.id),car:c.id,date:String(f.date),odo:Number(f.odo),money:Number(f.money),price:Number(f.price)>0?Number(f.price):c.price,full:f.full!==false}}).filter(Boolean);
+    return {id:String(f.id),car:c.id,date:String(f.date),odo:Number(f.odo),money:Number(f.money),price:Number(f.price)>0?Number(f.price):c.price,full:f.full!==false,u:Number(f.u)||0}}).filter(Boolean);
   const sv=(Array.isArray(d.services)?d.services:[]).map(s=>{const c=cs.find(c=>c.id===s.car);if(!c)return null;
-    return {id:String(s.id),car:c.id,date:String(s.date),odo:Number(s.odo)||0,name:String(s.name||''),parts:Number(s.parts)||0,labor:Number(s.labor)||0,notes:String(s.notes||'')}}).filter(Boolean);
+    return {id:String(s.id),car:c.id,date:String(s.date),odo:Number(s.odo)||0,name:String(s.name||''),parts:Number(s.parts)||0,labor:Number(s.labor)||0,notes:String(s.notes||''),u:Number(s.u)||0}}).filter(Boolean);
   return {cars:cs.sort((a,b)=>a.order-b.order),fills:fs,services:sv};
 }
 // Maintenance history brought over from the Car Notes app; added once per car.
@@ -1000,7 +1035,88 @@ function runSeeds(){
     rows.forEach(([date,odo,name,parts,labor],i)=>{const id=k+'-'+i;if(!services.some(s=>s.id===id))services.push({id,car:c.id,date,odo,name,parts,labor,notes:''})});
     meta.seeded.push(k)});
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify({v:2,cars,fills,services,seeded:meta.seeded||[],lastBackup:meta.lastBackup||null,snooze:meta.snooze||null}));return true}catch(_){toast('مساحة التخزين مش متاحة');return false}}
+const del=id=>{(meta.dels=meta.dels||{})[id]=Date.now()};   // tombstone, so a deletion reaches the other phones
+function store(){try{localStorage.setItem(KEY,JSON.stringify({v:2,cars,fills,services,seeded:meta.seeded||[],dels:meta.dels||{},lastBackup:meta.lastBackup||null,snooze:meta.snooze||null,sync:meta.sync||null}));return true}catch(_){toast('مساحة التخزين مش متاحة');return false}}
+// every data change is stored on the phone first, then pushed to GitHub when sync is on
+let rev=0;
+function save(){rev++;if(meta.sync)meta.sync.dirty=true;const ok=store();queueSync(2500);return ok}
+
+// ---- sync: the whole dataset as one JSON file in the user's own private GitHub repo ----
+const TKEY='petrol.token',SFILE='petrol-data.json';
+let syncBusy=false,syncTimer=null,syncErr='';
+const tok=()=>{try{return localStorage.getItem(TKEY)||''}catch(_){return ''}};
+const syncOn=()=>!!(meta.sync&&meta.sync.repo&&tok());
+function b64e(s){const b=new TextEncoder().encode(s);let o='';for(let i=0;i<b.length;i+=0x8000)o+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(o)}
+function b64d(c){const s=atob(c.replace(/\s/g,''));return new TextDecoder().decode(Uint8Array.from(s,ch=>ch.charCodeAt(0)))}
+const ghApi=(path,opt={})=>fetch('https://api.github.com/repos/'+meta.sync.repo+path,{cache:'no-store',...opt,headers:{Authorization:'Bearer '+tok(),Accept:'application/vnd.github+json'}});
+const syncDoc=()=>({app:'petrol',v:2,updated:new Date().toISOString(),cars,fills,services,seeded:meta.seeded||[],dels:meta.dels||{}});
+// Two phones can both have changes: keep every record, the newest edit of each one wins, tombstones remove.
+function mergeIn(r){
+  const n=normalize(r),dels={...(r.dels||{}),...(meta.dels||{})};
+  const mix=(mine,theirs)=>{const m=new Map();[...theirs,...mine].forEach(x=>{const o=m.get(x.id);if(!o||(x.u||0)>=(o.u||0))m.set(x.id,x)});return [...m.values()].filter(x=>!dels[x.id])};
+  cars=mix(cars,n.cars).sort((a,b)=>a.order-b.order);
+  const has=x=>cars.some(c=>c.id===x.car);
+  fills=mix(fills,n.fills).filter(has);services=mix(services,n.services).filter(has);
+  meta.dels=dels;meta.seeded=[...new Set([...(meta.seeded||[]),...(Array.isArray(r.seeded)?r.seeded:[])])];
+  pickCar();
+}
+function queueSync(ms){if(!syncOn())return;clearTimeout(syncTimer);syncTimer=setTimeout(sync,ms)}
+async function sync(){
+  if(!syncOn()||syncBusy)return;
+  if(!navigator.onLine){syncErr='مفيش نت';renderSync();renderAlerts();return}
+  syncBusy=true;renderSync();let retry=60000;
+  try{
+    const r=await ghApi('/contents/'+SFILE);let sha=null,changed=false;
+    if(r.status===200){const j=await r.json();sha=j.sha;
+      if(sha!==meta.sync.sha){mergeIn(JSON.parse(b64d(j.content)));meta.sync.sha=sha;changed=true}}
+    else if(r.status!==404)throw r.status;
+    if(meta.sync.dirty||!sha){const at=rev,
+      p=await ghApi('/contents/'+SFILE,{method:'PUT',body:JSON.stringify({message:'Petrol sync',content:b64e(JSON.stringify(syncDoc())),...(sha?{sha}:{})})});
+      if(!p.ok)throw p.status;
+      meta.sync.sha=(await p.json()).content.sha;meta.sync.dirty=rev!==at;retry=2500}
+    meta.sync.last=Date.now();syncErr='';store();if(changed)render();
+  }catch(e){
+    // 409/422: the file moved under us (another phone just pushed) → pull again shortly
+    if(e===409||e===422){retry=1500;syncErr=''}
+    else syncErr=e===401||e===403?'التوكن مش شغال أو انتهى':e===404?'الريبو مش موجود أو التوكن مالوش صلاحية عليه':'تعذّر الاتصال بـ GitHub';
+    if(meta.sync)meta.sync.dirty=true;store()}
+  syncBusy=false;renderSync();renderAlerts();
+  if(meta.sync&&meta.sync.dirty)queueSync(retry);
+}
+const hm=t=>new Date(t).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+function renderSync(){
+  const on=syncOn();$('syOff').hidden=on;$('syOn').hidden=!on;
+  $('syNote').innerHTML=!on?'اربط التطبيق بريبو خاص بيك على GitHub، وبياناتك هتتحفظ فيه لوحدها بعد كل تعديل، وتفتحها من أي موبايل.'
+    :`<span>مربوط بـ</span> <b class="n">${esc(meta.sync.repo)}</b><br>`+(syncBusy?'<span>جاري المزامنة…</span>'
+      :syncErr?`<span style="color:var(--bad)">${syncErr}.</span> <span>التعديلات محفوظة على الموبايل وهتترفع لما المشكلة تتحل.</span>`
+      :meta.sync.last?`<span>آخر مزامنة</span> ${iso(meta.sync.last)===today()?'<span>النهارده</span>':niceY(iso(meta.sync.last))} <span class="n">${hm(meta.sync.last)}</span>`:'<span>لسه ما اتزامنش</span>');
+}
+function openSync(){$('syErr').hidden=true;$('syRepo').value=meta.sync?meta.sync.repo:'';$('syTok').value='';$('syGo').disabled=false;openS('sySheet')}
+$('syOpen').onclick=$('wSync').onclick=openSync;
+$('syBack').onclick=openSettings;
+$('syNow').onclick=()=>sync();
+$('syStop').onclick=()=>{
+  const b=$('syStop');if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='متأكد؟ افصل';return}
+  b.classList.remove('sure');b.textContent='افصل';
+  try{localStorage.removeItem(TKEY)}catch(_){}meta.sync=null;syncErr='';store();renderSync();render();toast('المزامنة اتفصلت، وبياناتك لسه على الموبايل');
+};
+$('syForm').onsubmit=async e=>{
+  e.preventDefault();const fail=t=>{$('syErr').textContent=t;$('syErr').hidden=false;$('syGo').disabled=false};$('syErr').hidden=true;
+  const repo=$('syRepo').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,'').replace(/\/$/,''),token=$('syTok').value.trim();
+  if(!/^[\w.-]+\/[\w.-]+$/.test(repo))return fail('اكتب الريبو بالشكل ده: اسمك/اسم-الريبو');
+  if(!token)return fail('الصق التوكن.');
+  const old=meta.sync,oldTok=tok(),undo=()=>{meta.sync=old;try{oldTok?localStorage.setItem(TKEY,oldTok):localStorage.removeItem(TKEY)}catch(_){}};
+  $('syGo').disabled=true;meta.sync={repo,sha:null,dirty:true,last:null};ls(TKEY,token);
+  try{const r=await ghApi('');if(!r.ok)throw r.status;const j=await r.json();
+    if(!j.private){undo();return fail('الريبو ده Public، يعني بياناتك هتبقى ظاهرة لأي حد. خليه Private الأول.')}
+    if(j.permissions&&!j.permissions.push){undo();return fail('التوكن ده للقراءة بس. محتاج صلاحية Contents: Read and write.')}
+  }catch(s){undo();return fail(s===401?'التوكن غلط أو انتهى.':s===404?'الريبو مش موجود، أو التوكن مالوش صلاحية عليه.':'تعذّر الاتصال بـ GitHub.')}
+  await sync();
+  if(syncErr){const m=syncErr;undo();syncErr='';return fail(m+'.')}
+  $('syTok').value='';store();render();openSettings();toast('اتربط بـ GitHub');
+};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
+addEventListener('online',()=>sync());
 function pickCar(){let saved=null;try{saved=localStorage.getItem('car')}catch(_){}
   if(!cars.some(c=>c.id===current))current=cars.some(c=>c.id===saved)?saved:(cars[0]&&cars[0].id)||null}
 function load(){let d=null;try{d=JSON.parse(localStorage.getItem(KEY))}catch(_){}
@@ -1008,15 +1124,16 @@ function load(){let d=null;try{d=JSON.parse(localStorage.getItem(KEY))}catch(_){
   // (marked as already seeded, so a friend's own backups never pick it up either)
   const fresh=!d||!Array.isArray(d.cars);if(fresh)d={cars:[],fills:[],seeded:Object.keys(SEED_SV)};
   const n=normalize(d);cars=n.cars;fills=n.fills;services=n.services;
-  meta={lastBackup:d.lastBackup||null,snooze:d.snooze||null,seeded:Array.isArray(d.seeded)?d.seeded:[]};
-  if(!fresh)runSeeds();save();pickCar();render()}
+  meta={lastBackup:d.lastBackup||null,snooze:d.snooze||null,seeded:Array.isArray(d.seeded)?d.seeded:[],dels:d.dels||{},sync:d.sync||null};
+  if(!fresh)runSeeds();store();pickCar();render()}
 load();
+sync();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 
 // ---- backup / restore ----
 async function doBackup(){
   const json=JSON.stringify({app:'petrol',v:2,exported:new Date().toISOString(),cars,fills,services,seeded:meta.seeded},null,1),name=`petrol-backup-${today()}.json`;
-  const done=t=>{meta.lastBackup=Date.now();meta.snooze=null;save();render();renderSettings();toast(t)};
+  const done=t=>{meta.lastBackup=Date.now();meta.snooze=null;store();render();renderSettings();toast(t)};
   try{const file=new File([json],name,{type:'application/json'});
     if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'نسخة احتياطية - دفتر البنزين'});done('النسخة الاحتياطية اتبعتت');return}
   }catch(e){if(e&&e.name==='AbortError')return}
@@ -1026,9 +1143,106 @@ async function doBackup(){
 $('exportBtn').onclick=doBackup;
 $('importFile').onchange=$('wImport').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(!Array.isArray(d.cars)||!Array.isArray(d.fills))throw 0;
-    const n=normalize(d);cars=n.cars;fills=n.fills;services=n.services;meta.seeded=Array.isArray(d.seeded)?d.seeded:[];runSeeds();
+    const n=normalize(d),now=Date.now(),all=o=>[...o.cars,...o.fills,...o.services];
+    // the backup replaces what's here, on every synced phone too: what it lacks is deleted, what it holds is the newest
+    const keep=new Set(all(n).map(x=>x.id));all({cars,fills,services}).forEach(x=>{if(!keep.has(x.id))del(x.id)});
+    all(n).forEach(x=>{x.u=now;if(meta.dels)delete meta.dels[x.id]});
+    cars=n.cars;fills=n.fills;services=n.services;meta.seeded=Array.isArray(d.seeded)?d.seeded:[];runSeeds();
     current=null;sel=openId=armed=null;pickCar();save();render();closeS();toast(`اترجّع ${fills.length} تفويلة و${services.length} صيانة`)}
   catch(_){toast('الملف ده مش نسخة احتياطية من الدفتر')}};
+
+// ---- English: the UI is written in Arabic; in English mode every piece of UI text is swapped as it hits the page ----
+// Keys are the Arabic text of one text node (or placeholder / aria-label); EN_RX covers text with a value inside it.
+const EN={
+  // main screen
+  'دفتر البنزين':'Fuel Log','الإعدادات':'Settings','العربية':'Car','الفترة':'Period','متوسط الاستهلاك':'Average consumption','أرقام الفترة':'Period numbers',
+  'كل الفترة':'All time','آخر 30 يوم':'Last 30 days','آخر 3 شهور':'Last 3 months','السنة دي':'This year','السنة اللي فاتت':'Last year',
+  'لتر / 100 كم':'L / 100 km','استهلاك كويس':'Good consumption','استهلاك متوسط':'Average consumption','استهلاك عالي':'High consumption','مفيش بيانات كفاية في الفترة دي':'Not enough data in this period',
+  'تحت':'Under','لـ':'to','فوق':'Over','يعني':'i.e.','كم لكل لتر':'km per liter','سعر اللتر دلوقتي:':'Price per liter now:','جنيه':'EGP','ج':'EGP','تعديل':'Edit','حفظ':'Save',
+  'السعر الجديد هيتطبق على التفويلات الجاية بس، والقديمة بتفضل بسعرها.':'The new price applies to future fill-ups only; old ones keep their price.',
+  'آخر عداد':'Odometer','آخر تفويلة':'Last fill-up','النهارده':'today','امبارح':'yesterday',
+  'تكلفة الكيلو':'Cost per km','اتصرف':'Spent','المسافة':'Distance','اللترات':'Liters','يوميًا':'Per day','في الشهر':'Per month','كم':'km','لتر':'L',
+  'استهلاك كل تفويلة':'Consumption per fill-up','دوس على أي عمود':'Tap any bar','مفيش تفويلات كفاية في الفترة دي.':'Not enough fill-ups in this period.','المتوسط':'Avg',
+  'مسافة':'Distance','لترات':'Liters','كم/لتر':'km/L','مصروف البنزين الشهري':'Monthly fuel spend','ج/شهر':'EGP/month','دوس على أي شهر عشان تشوف أرقامه بس.':'Tap a month to see only its numbers.',
+  // alerts
+  'قرّب ميعاد':'Due soon:','جه ميعاد':'Due now:','شوف':'View','فاضل':'In','متأخر':'Overdue by','جرّب تاني':'Retry',
+  'لسه ما خدتش نسخة احتياطية من بياناتك.':"You haven't backed up your data yet.",'آخر نسخة احتياطية من':'Last backup was','يوم.':'days ago.','أيام.':'days ago.','خد نسخة':'Back up','بعدين':'Later',
+  // maintenance
+  'الصيانة':'Maintenance','مواعيد جاية':'Coming up','اللي اتعمل':'Done','+ سجّل صيانة':'+ Log service','+ تذكير':'+ Reminder','اتعملت':'Done',
+  'كل':'Every','كم · آخر مرة على':'km · last at','مفيش صيانة في الفترة دي.':'No services in this period.','اعرض أقل':'Show less','قطع':'Parts','· مصنعية':'· labor','مصنعية':'Labor',
+  'سجّل الصيانات اللي بتعملها (المبلغ والمصنعية والملحوظات)، وكمان تقدر تعمل تذكير بمواعيدها على حسب العداد.':'Log the services you do (cost, labor and notes), and set odometer-based reminders for the next ones.',
+  // fill log
+  'السجل':'Fill-up log','العداد':'Odometer','أول قراءة':'First reading','مش فُل تانك':'Not a full tank','ل/100كم':'L/100km','كويس':'Good','متوسط':'Average','عالي':'High',
+  'جنيه/كم':'EGP/km','سعر اللتر':'Price/L','الاستهلاك محسوب على':'Consumption measured over','استهلاكها هيظهر مع أول فُل تانك بعدها.':'Its consumption shows with the next full tank.',
+  'عدّل':'Edit','امسح':'Delete','متأكد؟ امسح':'Sure? Delete','مفيش تفويلات في الفترة دي.':'No fill-ups in this period.','دوس على "تفويلة جديدة" تحت عشان تسجّل أول واحدة.':'Tap "New fill-up" below to log your first one.',
+  'الاستهلاك = اللترات ÷ الكيلومترات من آخر فُل تانك. لو فوّلت نص تانك شيل علامة «فُل تانك»، والتطبيق هيحسبها مع الفُل اللي بعدها.':'Consumption = liters ÷ km since the last full tank. If you only filled part of the tank, untick "Full tank" and the app counts it with the next full one.',
+  // fill form
+  'تفويلة جديدة':'New fill-up','تعديل تفويلة':'Edit fill-up','التاريخ':'Date','العداد (كم)':'Odometer (km)','سعر اللتر (جنيه)':'Price per liter (EGP)','سجّل بـ':'Enter by','المبلغ':'Amount',
+  'المبلغ (جنيه)':'Amount (EGP)','فوّلت فُل تانك':'Full tank','من آخر تفويلة':'Since last fill-up','لتر/100كم':'L/100km','مع الفُل':'with the full','سجّل':'Save','احفظ التعديل':'Save changes',
+  'اختار العربية الأول.':'Pick a car first.','اكتب التاريخ والعداد والمبلغ.':'Enter the date, odometer and amount.','اكتب التاريخ والعداد واللترات.':'Enter the date, odometer and liters.','اكتب سعر اللتر.':'Enter the price per liter.',
+  'في تفويلة متسجلة بنفس قراءة العداد.':'A fill-up with this odometer reading already exists.','اتسجّلت':'Saved','اتعدّلت':'Updated','اتمسحت':'Deleted','اتحفظت':'Saved','السعر اتحفظ للتفويلات الجاية':'Price saved for future fill-ups',
+  // settings
+  'المظهر':'Appearance','زي الموبايل':'Same as phone','فاتح':'Light','داكن':'Dark','اللغة · Language':'Language · اللغة','العربيات':'Cars','+ عربية جديدة':'+ New car',
+  '· كويس تحت':'· good under','· عالي من':'· high from','مرجع الصيانة':'Maintenance reference','كل صيانة اتعملت، آخر مرة إمتى وبكام وكل كام كيلو':'Every service: when it was last done, what it cost and how often',
+  'مقارنة العربيات':'Compare cars','قارن بين العربيات':'Compare the cars','الاستهلاك وتكلفة الكيلو والصيانة، في أي فترة تختارها':'Consumption, cost per km and maintenance, for any period',
+  'النسخة الاحتياطية':'Backup','احفظ نسخة احتياطية':'Save a backup','رجّع من نسخة':'Restore from a backup',
+  'لسه ما خدتش نسخة احتياطية. بياناتك متخزنة على الموبايل ده بس، فاحفظ النسخة في Drive أو واتساب.':'No backup yet. Your data is stored on this phone only, so keep a backup in Drive or WhatsApp.',
+  'النسخة الاحتياطية اتبعتت':'Backup sent','النسخة الاحتياطية اتحفظت في التنزيلات':'Backup saved to Downloads','الملف ده مش نسخة احتياطية من الدفتر':"This file isn't a Fuel Log backup",'مساحة التخزين مش متاحة':'Storage is not available',
+  // sync
+  'المزامنة التلقائية':'Automatic sync','اربط بـ GitHub':'Connect to GitHub','زامن دلوقتي':'Sync now','افصل':'Disconnect','متأكد؟ افصل':'Sure? Disconnect','مربوط بـ':'Linked to','جاري المزامنة…':'Syncing…','آخر مزامنة':'Last sync','لسه ما اتزامنش':'Not synced yet',
+  'اربط التطبيق بريبو خاص بيك على GitHub، وبياناتك هتتحفظ فيه لوحدها بعد كل تعديل، وتفتحها من أي موبايل.':'Connect the app to a private GitHub repo of yours: your data is saved there automatically after every change, and you can open it from any phone.',
+  'التعديلات محفوظة على الموبايل وهتترفع لما المشكلة تتحل.':'Your changes are safe on this phone and will upload once this is fixed.',
+  'مفيش نت':'No internet','التوكن مش شغال أو انتهى':'The token is invalid or expired','الريبو مش موجود أو التوكن مالوش صلاحية عليه':"The repo doesn't exist or the token can't access it",'تعذّر الاتصال بـ GitHub':"Couldn't reach GitHub",
+  'المزامنة مع GitHub':'Sync with GitHub','رجوع':'Back','اعمل ريبو جديد على GitHub وخليه':'Create a new GitHub repo and make it','، مثلاً باسم':', named for example','من':'From',
+  'اعمل توكن للريبو ده بس، بصلاحية':'create a token for that repo only, with the permission','اكتب اسم الريبو والصق التوكن هنا. على أي موبايل تاني اعمل نفس الخطوة دي بنفس التوكن.':'Type the repo name and paste the token here. On any other phone, do this same step with the same token.',
+  'الريبو':'Repo','التوكن':'Token','التوكن بيتحفظ على الموبايل ده بس، ومش بيتحط في النسخة الاحتياطية.':'The token is kept on this phone only and never goes into a backup.','اربط وزامن':'Connect and sync',
+  'اكتب الريبو بالشكل ده: اسمك/اسم-الريبو':'Write the repo like this: username/repo-name','الصق التوكن.':'Paste the token.','التوكن غلط أو انتهى.':'The token is wrong or expired.','الريبو مش موجود، أو التوكن مالوش صلاحية عليه.':"The repo doesn't exist, or the token can't access it.",'تعذّر الاتصال بـ GitHub.':"Couldn't reach GitHub.",
+  'الريبو ده Public، يعني بياناتك هتبقى ظاهرة لأي حد. خليه Private الأول.':'This repo is Public, so anyone could see your data. Make it Private first.','التوكن ده للقراءة بس. محتاج صلاحية Contents: Read and write.':'This token is read-only. It needs the permission Contents: Read and write.',
+  'اتربط بـ GitHub':'Connected to GitHub','المزامنة اتفصلت، وبياناتك لسه على الموبايل':'Sync disconnected; your data is still on this phone',
+  // car editor
+  'عربية':'Car','تعديل العربية':'Edit car','عربية جديدة':'New car','الاسم':'Name','سعر اللتر دلوقتي (جنيه)':'Price per liter now (EGP)','«كويس» لو أقل من':'"Good" if under','«عالي» من':'"High" from',
+  'الحدود دي باللتر لكل 100 كم، وهي اللي بتحدد لون العداد والتفويلات. كل عربية ليها طبيعتها.':'These limits are in liters per 100 km and set the colors of the gauge and fill-ups. Every car is different.',
+  'احفظ':'Save','امسح العربية':'Delete car','اكتب اسم العربية.':"Enter the car's name.",'حد «عالي» لازم يكون أكبر من حد «كويس».':'The "High" limit must be above the "Good" limit.','العربية اتعدّلت':'Car updated','العربية اتضافت':'Car added','العربية اتمسحت':'Car deleted',
+  // compare
+  'لحد':'To','لتر/100 كم':'L/100 km','المسافة (كم)':'Distance (km)','بنزين (ج)':'Fuel (EGP)','صيانة (ج)':'Maintenance (EGP)','الإجمالي (ج)':'Total (EGP)','بنزين في الشهر (ج)':'Fuel per month (EGP)',
+  'الأخضر هو الأحسن. الاستهلاك بيتحسب من التفويلات اللي في الفترة دي بس.':'Green is the better one. Consumption is calculated only from fill-ups inside this period.',
+  // maintenance reference + service form + reminders
+  'دوّر: زيت، بوجيهات، تيل…':'Search services…','بالنوع':'By type','بالتاريخ':'By date','بند · إجمالي':'items · total','مرة':'×','مرات':'×','من آخر مرة':'Since last:','كم · بتتعمل كل':'km · done about every','كم تقريبًا':'km',
+  'مفيش صيانة بالاسم ده.':'No service with that name.','مفيش صيانات متسجلة للعربية دي.':'No services logged for this car.',
+  'صيانة':'Service','سجّل صيانة':'Log service','تعديل صيانة':'Edit service','النوع':'Type','المبلغ / قطع غيار (جنيه)':'Cost / parts (EGP)','المصنعية (جنيه)':'Labor (EGP)','ملحوظات':'Notes',
+  'مثلاً: نوع الزيت، اسم الميكانيكي، الضمان…':'e.g. oil type, mechanic, warranty…','الإجمالي':'Total','احفظ وزوّد بند تاني في نفس اليوم':'Save and add another item for the same day',
+  'اكتب التاريخ.':'Enter the date.','اكتب نوع الصيانة.':'Enter the service type.','المبالغ لازم تكون موجبة.':'Amounts must be positive.',
+  'تذكير صيانة':'Service reminder','تعديل تذكير':'Edit reminder','كل كام كم':'Every (km)','آخر مرة على عداد':'Last done at (km)','اكتب كل كام كيلو.':'Enter the interval in km.','اكتب العداد آخر مرة اتعملت.':'Enter the odometer when it was last done.',
+  'التطبيق بيقارن بآخر قراءة عداد، وينبّهك لما يفضل 10% من المسافة. ولما تسجّل صيانة بنفس الاسم، التذكير بيتحدّث لوحده.':'The app compares with the latest odometer reading and alerts you when 10% of the distance is left. Logging a service with the same name updates the reminder by itself.',
+  // welcome
+  'أهلاً بيك في دفتر البنزين':'Welcome to Fuel Log','+ زوّد عربيتك':'+ Add your car','عندي نسخة احتياطية، رجّعها':'I have a backup, restore it','بياناتي على GitHub، اربطها':'My data is on GitHub, connect it',
+  'ابدأ بإضافة عربيتك، وبعدها سجّل كل تفويلة والتطبيق هيحسبلك الاستهلاك وتكلفة الكيلو. بياناتك بتتخزن على موبايلك ده بس، ومحدش غيرك بيشوفها.':'Start by adding your car, then log every fill-up and the app works out your consumption and cost per km. Your data is stored on this phone only; nobody else can see it.'
+};
+const T=k=>EN[k]||k,BK='Your data is stored on this phone only, so keep a backup in Drive or WhatsApp.';
+const EN_RX=[
+  [/^(\d+) تفويلة$/,'$1 fill-ups'],[/^اعرض الكل \((\d+) بند\)$/,'Show all ($1 items)'],[/^المتوسط ([\d.,]+)$/,'Avg $1'],
+  [/^من (\d+) (?:يوم|أيام)$/,'$1 days ago'],[/^(.+) · من (.+)$/,'$1 · since $2'],[/^آخر مرة (.+?)( ·)?$/,'Last: $1$2'],
+  [/^(.+): ([\d.,]+) لتر لكل 100 كم$/,'$1: $2 L per 100 km'],[/^(.+): ([\d.,]+) جنيه$/,'$1: $2 EGP'],
+  [/^· (.+) — فاضل$/,'· $1 — in'],[/^· (.+) — متأخر$/,'· $1 — overdue by'],[/^كم من فُل تانك (.+)$/,'km since the full tank of $1'],
+  [/^(اتسجّلت|اتعدّلت) · سعر اللتر بقى ([\d.,]+)$/,(m,a,p)=>`${T(a)} · price per liter is now ${p}`],[/^(اتسجّلت|اتعدّلت) · تذكير (.+) اتحدّث$/,(m,a,n)=>`${T(a)} · reminder "${n}" updated`],
+  [/^اترجّع (\d+) تفويلة و(\d+) صيانة$/,'Restored $1 fill-ups and $2 services'],[/^هيتمسح معاها (\d+) تفويلة و(\d+) صيانة\. متأكد؟$/,'This also deletes $1 fill-ups and $2 services. Sure?'],
+  [/^الإجمالي على (.+):$/,'Total on $1:'],[/^التعديلات لسه ما اترفعتش على GitHub: (.+)\.$/,(m,e)=>`Changes not uploaded to GitHub yet: ${T(e)}.`],
+  [/^آخر نسخة: (.+) \(من$/,'Last backup: $1 ('],[/^(?:يوم|أيام)\)\. بياناتك .+$/,'days ago). '+BK],[/^آخر نسخة: (.+) \(النهارده\)\. بياناتك .+$/,'Last backup: $1 (today). '+BK],
+  [/^(.+)\.$/,(m,e)=>EN[e]?EN[e]+'.':m]   // an error message with a full stop added
+];
+if(LANG==='en'){
+  const AR=/[؀-ۿ]/,miss=window.__miss=new Set();
+  const tr=s=>{const k=s.replace(/\s+/g,' ').trim();if(!k)return null;let v=EN[k];
+    if(v===undefined)for(const [rx,rep] of EN_RX)if(rx.test(k)){v=k.replace(rx,rep);if(v===k)v=undefined;else break}
+    if(v===undefined){miss.add(k);return null}
+    return s.match(/^\s*/)[0]+v+s.match(/\s*$/)[0]};
+  const text=n=>{if(AR.test(n.nodeValue)&&n.parentElement&&!n.parentElement.closest('script,style,textarea,[data-user]')){const v=tr(n.nodeValue);if(v!==null)n.nodeValue=v}};
+  const attrs=el=>['placeholder','aria-label'].forEach(a=>{const x=el.getAttribute&&el.getAttribute(a);if(x&&AR.test(x)){const v=tr(x);if(v!==null)el.setAttribute(a,v)}});
+  const walk=root=>{if(root.nodeType===3)return text(root);if(root.nodeType!==1)return;attrs(root);root.querySelectorAll('[placeholder],[aria-label]').forEach(attrs);
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode())text(n)};
+  walk(document.body);
+  new MutationObserver(ms=>ms.forEach(m=>{if(m.type==='characterData')text(m.target);else m.addedNodes.forEach(walk)})).observe(document.body,{childList:true,subtree:true,characterData:true});
+}
 
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
