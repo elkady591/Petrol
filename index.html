@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap">
 <style>
-/* Layout: phone-first single column. Alerts → car/period pickers → gauge hero → stat grid → charts → compare → maintenance → fill log; sheets slide up from the bottom. */
+/* Layout: phone-first single column. Alerts → car/period pickers → gauge hero → stat grid → charts → fill log → maintenance; sheets slide up from the bottom. */
 :root{
   --bg:#EDF0F3; --panel:#FFFFFF; --ink:#14202A; --muted:#62707D; --line:#DCE2E8; --soft:#F4F6F8;
   --petrol:#1E4C5C; --petrol-ink:#FFFFFF; --accent:#D8841A; --accent-ink:#FFFFFF;
@@ -351,6 +351,12 @@ html{padding-top:0}
     <p class="note">دوس على أي شهر عشان تشوف أرقامه بس.</p>
   </section>
 
+  <section class="card" aria-labelledby="lh" style="padding-bottom:12px">
+    <h2 id="lh">السجل <small id="lcount"></small></h2>
+    <div class="fills" id="fills"></div>
+    <p class="note">الاستهلاك = اللترات ÷ الكيلومترات من آخر فُل تانك. لو فوّلت نص تانك شيل علامة «فُل تانك»، والتطبيق هيحسبها مع الفُل اللي بعدها.</p>
+  </section>
+
   <section class="card" id="mtCard" aria-labelledby="mth">
     <h2 id="mth">الصيانة <small id="svTotal"></small></h2>
     <div id="mtWrap"><h4 class="sub-h">مواعيد جاية <small id="mtodo"></small></h4><div class="mts" id="mts"></div></div>
@@ -358,12 +364,6 @@ html{padding-top:0}
       <button class="btn ghost wide small" type="button" id="svMore" hidden></button></div>
     <p class="empty" id="mtEmpty" hidden style="padding:6px 4px 12px">سجّل الصيانات اللي بتعملها (المبلغ والمصنعية والملحوظات)، وكمان تقدر تعمل تذكير بمواعيدها على حسب العداد.</p>
     <div class="twobtn"><button class="btn pri small" type="button" id="svAdd">+ سجّل صيانة</button><button class="btn ghost small" type="button" id="mtAdd">+ تذكير</button></div>
-  </section>
-
-  <section class="card" aria-labelledby="lh" style="padding-bottom:12px">
-    <h2 id="lh">السجل <small id="lcount"></small></h2>
-    <div class="fills" id="fills"></div>
-    <p class="note">الاستهلاك = اللترات ÷ الكيلومترات من آخر فُل تانك. لو فوّلت نص تانك شيل علامة «فُل تانك»، والتطبيق هيحسبها مع الفُل اللي بعدها.</p>
   </section>
 </main>
 
