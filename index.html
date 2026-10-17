@@ -150,6 +150,8 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .rrow{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);flex-wrap:wrap}
 .rrow input{width:96px;flex:none;padding:8px 10px;font-size:16px}
 .remind .hint{margin:0}
+.remsug b{color:var(--ink);font-weight:600}
+.rrow input::placeholder{color:var(--muted);opacity:.75}
 .remind.off .rrow,.remind.off .hint{opacity:.45;pointer-events:none}
 .welcome{display:grid;gap:12px}
 .welcome h2{font-size:17px;margin:0}
@@ -503,7 +505,8 @@ html{padding-top:0}
     <div class="full remind">
       <label class="chk"><input type="checkbox" id="sRem">فكّرني بيها تاني</label>
       <div class="rrow" id="sRemRow"><span>بعد</span><input type="number" id="sRemKm" inputmode="numeric" min="0" step="500" aria-label="كم"><span>كم أو</span><input type="number" id="sRemMo" inputmode="numeric" min="0" step="1" aria-label="شهور"><span>شهر</span></div>
-      <p class="hint" id="sRemNote">اللي ييجي الأول. سيب أي خانة فاضية لو مش عايزها.</p>
+      <p class="hint remsug" id="sRemSug" data-user hidden></p>
+      <p class="hint" id="sRemNote">اللي ييجي الأول. سيب الخانة فاضية تاخد المقترح، أو اكتب 0 لو مش عايزها.</p>
     </div>
     <div class="err" id="sErr" hidden></div>
     <button class="btn pri" type="submit" id="sSave">احفظ</button>
@@ -929,11 +932,14 @@ function showGuide(el,name,car){
 let remTouched=false;
 function svGuide(){
   const car=cars.find(c=>c.id===svCar),name=$('sName').value.trim(),g=showGuide('sHint',name,car),m=car&&car.maint.find(x=>x.name.trim()===name);
-  if(!remTouched){
-    const p=prefFor(car,name);
-    const v=m?{on:true,km:m.every,mo:m.months}:p&&(p.km||p.mo)&&!svEdit?{on:true,km:p.km,mo:p.mo}:g&&(g.km||g.mo)&&!svEdit?{on:true,km:g.km,mo:g.mo}:{on:false,km:0,mo:0};
-    $('sRem').checked=v.on;$('sRemKm').value=v.km||'';$('sRemMo').value=v.mo||'';
-  }
+  // the suggestion sits inside the boxes (grey) and under them; an empty box takes it on save
+  const p=prefFor(car,name);
+  const sug=m?{km:m.every,mo:m.months,src:'rem'}:p&&(p.km||p.mo)?{km:p.km,mo:p.mo,src:'pref'}:g&&(g.km||g.mo)?{km:g.km,mo:g.mo,src:'guide'}:null;
+  $('sRemKm').placeholder=sug&&sug.km?String(sug.km):'';$('sRemMo').placeholder=sug&&sug.mo?String(sug.mo):'';
+  const src={rem:['التذكير الحالي','current reminder'],pref:['اختيارك للعربية دي','your choice for this car'],guide:['المعتاد','usual']};
+  $('sRemSug').hidden=!sug;
+  if(sug)$('sRemSug').innerHTML=`<b>${LANG==='en'?'Suggested':'المقترح'}:</b> ${esc(prefText(sug))} <span>(${src[sug.src][LANG==='en'?1:0]})</span>`;
+  if(!remTouched){$('sRem').checked=!!sug&&(!svEdit||sug.src==='rem');$('sRemKm').value='';$('sRemMo').value=''}
   $('sRem').closest('.remind').classList.toggle('off',!$('sRem').checked);
 }
 $('sName').addEventListener('input',svGuide);
@@ -963,7 +969,8 @@ function saveSvc(more){
   if(!date)return fail('اكتب التاريخ.');
   if(!name)return fail('اكتب نوع الصيانة.');
   if(parts<0||labor<0)return fail('المبالغ لازم تكون موجبة.');
-  const remOn=$('sRem').checked,rk=Number($('sRemKm').value)||0,rm=Number($('sRemMo').value)||0;
+  const boxVal=id=>{const e=$(id);return Number(e.value!==''?e.value:e.placeholder)||0};
+  const remOn=$('sRem').checked,rk=boxVal('sRemKm'),rm=boxVal('sRemMo');
   if(remOn&&!(rk>0)&&!(rm>0))return fail('اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.');
   const rec={car:car.id,date,odo,name,parts:r2(parts),labor:r2(labor),notes,u:Date.now()};
   if(svEdit)Object.assign(services.find(s=>s.id===svEdit),rec);
@@ -1317,7 +1324,7 @@ const EN={
   'تذكير صيانة':'Service reminder','تعديل تذكير':'Edit reminder','كل كام كم':'Every (km)','آخر مرة على عداد':'Last done at (km)','اكتب كل كام كيلو.':'Enter the interval in km.','اكتب العداد آخر مرة اتعملت.':'Enter the odometer when it was last done.',
   'التطبيق بينبّهك قبل الميعاد بـ 500 كم أو بشهر. ولما تسجّل صيانة بنفس الاسم، التذكير بيتحدّث لوحده.':'The app alerts you 500 km or one month before it is due. Logging a service with the same name updates the reminder by itself.',
   'فكّرني بيها تاني':'Remind me again','بعد':'In','كم أو':'km or','شهر':'months','شهور':'months','يوم':'days','أيام':'days','أو':'or',
-  'اللي ييجي الأول. سيب أي خانة فاضية لو مش عايزها.':"Whichever comes first. Leave a box empty if you don't need it.",
+  'اللي ييجي الأول. سيب الخانة فاضية تاخد المقترح، أو اكتب 0 لو مش عايزها.':"Whichever comes first. Leave a box empty to take the suggestion, or type 0 if you don't need it.",
   'أو كل كام شهر':'Or every (months)','آخر مرة يوم':'Last done on','كم · فاضل':'km · in','كم · متأخر':'km · overdue by',
   'شهور · آخر مرة على':'months · last at','شهر · آخر مرة على':'months · last at',
   'اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.':'Enter after how many km or months, or untick the reminder.',
