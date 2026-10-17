@@ -144,6 +144,13 @@ h1{font-family:var(--f-display);font-weight:700;font-size:22px;margin:0}
 .steps b{color:var(--ink)}
 html[dir=ltr] input[type=number]{text-align:left}
 html[dir=ltr] .crow svg{transform:scaleX(-1)}
+.svhint{margin:-6px 0 0;padding:7px 10px;border-radius:10px;background:var(--soft);font-size:12px;line-height:1.55}
+.svhint b{color:var(--ink);font-weight:600}
+.remind{display:grid;gap:8px;padding:10px 12px;border:1px dashed var(--line);border-radius:12px}
+.rrow{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);flex-wrap:wrap}
+.rrow input{width:96px;flex:none;padding:8px 10px;font-size:16px}
+.remind .hint{margin:0}
+.remind.off .rrow,.remind.off .hint{opacity:.45;pointer-events:none}
 .welcome{display:grid;gap:12px}
 .welcome h2{font-size:17px;margin:0}
 .welcome p{margin:0;color:var(--muted);font-size:14px}
@@ -488,10 +495,16 @@ html{padding-top:0}
     <label>التاريخ<input type="date" id="sDate"></label>
     <label>العداد (كم)<input type="number" id="sOdo" inputmode="numeric" min="0" step="1"></label>
     <label class="full">النوع<input type="text" id="sName" list="mtSug" maxlength="40" autocomplete="off" placeholder="زيت وفلتر"></label>
+    <p class="hint full svhint" id="sHint" data-user hidden></p>
     <label>المبلغ / قطع غيار (جنيه)<input type="number" id="sParts" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
     <label>المصنعية (جنيه)<input type="number" id="sLabor" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
     <label class="full">ملحوظات<textarea id="sNotes" rows="2" maxlength="300" placeholder="مثلاً: نوع الزيت، اسم الميكانيكي، الضمان…"></textarea></label>
     <div class="live" id="sLive" style="grid-template-columns:1fr"></div>
+    <div class="full remind">
+      <label class="chk"><input type="checkbox" id="sRem">فكّرني بيها تاني</label>
+      <div class="rrow" id="sRemRow"><span>بعد</span><input type="number" id="sRemKm" inputmode="numeric" min="0" step="500" aria-label="كم"><span>كم أو</span><input type="number" id="sRemMo" inputmode="numeric" min="0" step="1" aria-label="شهور"><span>شهر</span></div>
+      <p class="hint" id="sRemNote">اللي ييجي الأول. سيب أي خانة فاضية لو مش عايزها.</p>
+    </div>
     <div class="err" id="sErr" hidden></div>
     <button class="btn pri" type="submit" id="sSave">احفظ</button>
     <button class="btn ghost" type="button" id="sSaveMore">احفظ وزوّد بند تاني في نفس اليوم</button>
@@ -505,9 +518,12 @@ html{padding-top:0}
   <form class="form" id="mtForm" novalidate>
     <label class="full">النوع<input type="text" id="mName" list="mtSug" maxlength="40" autocomplete="off" placeholder="زيت وفلتر"></label>
     <datalist id="mtSug"></datalist>
+    <p class="hint full svhint" id="mHint" data-user hidden></p>
     <label>كل كام كم<input type="number" id="mEvery" inputmode="numeric" min="0" step="1" placeholder="5000"></label>
+    <label>أو كل كام شهر<input type="number" id="mMonths" inputmode="numeric" min="0" step="1" placeholder="6"></label>
     <label>آخر مرة على عداد<input type="number" id="mLast" inputmode="numeric" min="0" step="1"></label>
-    <p class="hint full">التطبيق بيقارن بآخر قراءة عداد، وينبّهك لما يفضل 10% من المسافة. ولما تسجّل صيانة بنفس الاسم، التذكير بيتحدّث لوحده.</p>
+    <label>آخر مرة يوم<input type="date" id="mLastDate"></label>
+    <p class="hint full">التطبيق بينبّهك قبل الميعاد بـ 500 كم أو بشهر. ولما تسجّل صيانة بنفس الاسم، التذكير بيتحدّث لوحده.</p>
     <div class="err" id="mErr" hidden></div>
     <button class="btn pri" type="submit">احفظ</button>
     <button class="btn del" type="button" id="mDel">امسح</button>
@@ -582,10 +598,25 @@ function stats(id,inRange=inPeriod){
     s={km,L,M,l100:L/km*100,kml:km/L,epk:M/km,kmDay:days>0?km/days:NaN,month:days>0?M/days*30:NaN}}
   return {rows,s,spent:sum(rows,r=>r.money),liters:sum(rows,r=>r.liters)};
 }
+// A reminder is due by km, by months, or by whichever comes first when it has both.
+const addMonths=(d,n)=>{const x=new Date(d+'T00:00');x.setMonth(x.getMonth()+n);return x};
 function mtState(m,cur){
-  const rem=m.last+m.every-cur,used=Math.min(Math.max((cur-m.last)/m.every,0),1);
-  return {rem,used,st:rem<=0?'bad':rem<=m.every*.1?'warn':'good'};
+  const hasKm=m.every>0&&Number.isFinite(cur),hasMo=m.months>0&&!!m.lastDate;
+  const km=hasKm?m.last+m.every-cur:NaN,dd=hasMo?Math.round((addMonths(m.lastDate,m.months)-new Date(today()+'T00:00'))/DAY):NaN;
+  const fr=[hasKm?(cur-m.last)/m.every:NaN,hasMo?1-dd/(m.months*30.44):NaN].filter(Number.isFinite);
+  const used=fr.length?Math.min(Math.max(...fr,0),1):0;
+  // warn 500 km or one month ahead
+  return {km,dd,used,st:km<=0||dd<=0?'bad':km<=500||dd<=30?'warn':'good'};
 }
+const moW=n=>n>=3&&n<=10?'شهور':'شهر';
+const dur=d=>d>=60?`<span class="n">${Math.round(d/30.44)}</span> ${moW(Math.round(d/30.44))}`:`<span class="n">${d}</span> ${dayW(d)}`;
+function mtRemHTML({km,dd}){
+  const p=[];
+  if(Number.isFinite(km))p.push(km<=0?`متأخر <span class="n">${fmt(-km,0)}</span> كم`:`فاضل <span class="n">${fmt(km,0)}</span> كم`);
+  if(Number.isFinite(dd))p.push(dd<=0?`متأخر ${dur(-dd)}`:`فاضل ${dur(dd)}`);
+  return p.join(' · ');
+}
+const mtEveryHTML=m=>[m.every>0?`كل <span class="n">${fmt(m.every,0)}</span> كم`:'',m.months>0?`${m.every>0?'أو ':'كل '}<span class="n">${m.months}</span> ${moW(m.months)}`:''].filter(Boolean).join(' ');
 const backupAge=()=>meta.lastBackup?Math.floor((Date.now()-meta.lastBackup)/DAY):null;
 const backupDue=()=>!(syncOn()&&!syncErr)&&fills.length&&(!meta.lastBackup||Date.now()-meta.lastBackup>14*DAY)&&!(meta.snooze&&Date.now()-meta.snooze<3*DAY);
 
@@ -642,9 +673,9 @@ function render(){
 
 function renderAlerts(){
   const out=[];
-  cars.forEach(c=>{const cur=curOdo(c.id);if(!Number.isFinite(cur))return;
-    c.maint.forEach(m=>{const {rem,st}=mtState(m,cur);if(st==='good')return;
-      out.push(`<div class="banner ${st}"><span>${st==='bad'?'جه ميعاد':'قرّب ميعاد'} <b>${esc(m.name)}</b> · ${esc(c.name)} — ${rem<=0?`متأخر <span class="n">${fmt(-rem,0)}</span> كم`:`فاضل <span class="n">${fmt(rem,0)}</span> كم`}</span><button class="btn ghost small" type="button" data-gocar="${esc(c.id)}">شوف</button></div>`)})});
+  cars.forEach(c=>{const cur=curOdo(c.id);
+    c.maint.forEach(m=>{const s=mtState(m,cur),st=s.st;if(st==='good')return;
+      out.push(`<div class="banner ${st}"><span>${st==='bad'?'جه ميعاد':'قرّب ميعاد'} <b>${esc(m.name)}</b> · ${esc(c.name)} — ${mtRemHTML(s)}</span><button class="btn ghost small" type="button" data-gocar="${esc(c.id)}">شوف</button></div>`)})});
   if(syncOn()&&syncErr&&meta.sync.dirty)out.push(`<div class="banner warn"><span>التعديلات لسه ما اترفعتش على GitHub: ${syncErr}.</span><button class="btn ghost small" type="button" data-sy="1">جرّب تاني</button></div>`);
   if(backupDue()){const a=backupAge();
     out.push(`<div class="banner"><span>${a===null?'لسه ما خدتش نسخة احتياطية من بياناتك.':`آخر نسخة احتياطية من <span class="n">${a}</span> ${dayW(a)}.`}</span><span class="bact"><button class="btn pri small" type="button" data-bk="now">خد نسخة</button><button class="btn ghost small" type="button" data-bk="later">بعدين</button></span></div>`)}
@@ -691,12 +722,12 @@ function renderMaint(){
   // reminders
   $('mtWrap').hidden=!car.maint.length;
   $('mtodo').innerHTML=Number.isFinite(cur)?`آخر عداد <span class="n">${fmt(cur,0)}</span>`:'';
-  const items=car.maint.map(m=>({m,...(Number.isFinite(cur)?mtState(m,cur):{rem:NaN,used:0,st:'good'})})).sort((a,b)=>(a.rem||0)-(b.rem||0));
-  $('mts').innerHTML=items.map(({m,rem,used,st})=>`<div class="mt ${st}">
-    <button class="mtb" type="button" data-mt="${esc(m.id)}"><span class="nm">${esc(m.name)}</span><span class="sub">كل <span class="n">${fmt(m.every,0)}</span> كم · آخر مرة على <span class="n">${fmt(m.last,0)}</span></span>
-      <span class="rem">${!Number.isFinite(rem)?'':rem<=0?`متأخر <span class="n">${fmt(-rem,0)}</span> كم`:`فاضل <span class="n">${fmt(rem,0)}</span> كم`}</span></button>
+  const items=car.maint.map(m=>({m,s:mtState(m,cur)})).sort((a,b)=>b.s.used-a.s.used);
+  $('mts').innerHTML=items.map(({m,s})=>{const {used,st}=s;return `<div class="mt ${st}">
+    <button class="mtb" type="button" data-mt="${esc(m.id)}"><span class="nm">${esc(m.name)}</span><span class="sub">${mtEveryHTML(m)} · ${m.every>0&&m.last>0?`آخر مرة على <span class="n">${fmt(m.last,0)}</span>`:`آخر مرة ${niceY(m.lastDate||today())}`}</span>
+      <span class="rem">${mtRemHTML(s)}</span></button>
     <button class="btn ghost small" type="button" data-done="${esc(m.id)}">اتعملت</button>
-    <div class="pb"><i style="width:${(used*100).toFixed(1)}%"></i></div></div>`).join('');
+    <div class="pb"><i style="width:${(used*100).toFixed(1)}%"></i></div></div>`}).join('');
   // service log for the selected period, grouped by day
   const sv=all.filter(s=>inPeriod(s.date));
   $('svTotal').innerHTML=sv.length?`اتصرف ${money(sum(sv,svTotal))} ج`:'';
@@ -849,6 +880,66 @@ $('cDel').onclick=()=>{
 
 // ---- maintenance: service log ----
 const SV_NAMES=LANG==='en'?['Oil & filter','Air filter','Fuel filter','A/C filter','Spark plugs','Alternator belt','Timing belt','Front brake pads','Rear brake pads','Brake discs','Injectors','Battery','Tires','Coolant','Gearbox oil']:['زيت وفلتر','فلتر هوا','فلتر بنزين','فلتر تكييف','بوجيهات','سير دينامو','سير كاتينة','تيل أمامي','تيل خلفي','طنابير','رشاشات','بطارية','كاوتش','ماية ردياتير','زيت فتيس'];
+// Usual intervals for Egyptian heat, dust and stop-and-go traffic (researched Oct 2026: manufacturer schedules
+// summarised on auto-abc.eu, Hyundai/Kia "severe use" tables that list Egypt, workshop guidance).
+// km/mo = what the reminder suggests. car = overrides for the user's cars: Aveo 2008 1.5 NA automatic,
+// Astra J 2014 1.6 NA automatic (picked by car name). First matching row wins, so specific rows come first.
+const SV_GUIDE=[
+  {re:/فتيس|gear|transmission|atf/i,km:60000,mo:0,ar:'زيت الفتيس الأوتوماتيك: كل 60,000 كم في الحر والزحمة.',en:'Automatic gearbox oil: every 60,000 km in heat and traffic.',
+    car:{aveo:{ar:'Aveo أوتوماتيك: الكتالوج بيقول 60,000 كم في الظروف الصعبة (زحمة وحر).',en:'Aveo automatic: the manual says 60,000 km under severe use (traffic, heat).'},
+         astra:{ar:'Astra J أوتوماتيك 6 سرعات: كل 60,000–90,000 كم في الحر والزحمة، والمستوى بيتظبط بجهاز.',en:'Astra J 6-speed automatic: every 60,000–90,000 km in heat and traffic; the level is set with a scan tool.'}}},
+  {re:/زيت فرامل|brake fluid/i,km:40000,mo:24,ar:'زيت الفرامل: كل سنتين، لأنه بيشرب رطوبة.',en:'Brake fluid: every 2 years, since it absorbs moisture.'},
+  {re:/موبين|coil/i,km:0,mo:0,ar:'ملهاش ميعاد ثابت، بتتغير لما تبوظ (رعشة في الموتور أو لمبة الموتور).',en:'No fixed interval; replaced when it fails (engine misfire or check-engine light).'},
+  {re:/زيت|oil/i,km:10000,mo:6,ar:'كل 5,000 كم (زيت معدني) لـ 10,000 كم (تخليقي) أو 6 شهور. الكتالوج بيقول 15,000، بس الحر والزحمة بيقصّروه.',en:'Every 5,000 km (mineral oil) to 10,000 km (synthetic) or 6 months. The manual says 15,000, but heat and traffic shorten it.'},
+  {re:/تكييف|cabin|a\/c/i,km:15000,mo:12,ar:'كل 15,000 كم أو سنة.',en:'Every 15,000 km or once a year.'},
+  {re:/فلتر (هوا|هواء)|air filter/i,km:15000,mo:12,ar:'كل 10,000–15,000 كم في التراب (الكتالوج 30,000)، ونفّضه مع كل تغيير زيت.',en:'Every 10,000–15,000 km in dusty conditions (the manual says 30,000); blow it clean at every oil change.'},
+  {re:/فلتر بنزين|fuel filter/i,km:40000,mo:0,ar:'كل 30,000–40,000 كم.',en:'Every 30,000–40,000 km.',car:{aveo:{km:45000,ar:'Aveo: الكتالوج بيقول كل 45,000 كم.',en:'Aveo: the manual says every 45,000 km.'}}},
+  {re:/بوجيه|spark/i,km:30000,mo:0,ar:'كل 30,000 كم للعادي، والإيريديوم 60,000 كم.',en:'Every 30,000 km for standard plugs, 60,000 km for iridium.',
+    car:{aveo:{ar:'Aveo 1.5: كل 30,000 كم.',en:'Aveo 1.5: every 30,000 km.'},astra:{ar:'Astra J 1.6: كل 30,000 كم، ولو إيريديوم أصلي 60,000.',en:'Astra J 1.6: every 30,000 km; 60,000 if they are genuine iridium.'}}},
+  {re:/كاتين|timing/i,km:60000,mo:48,ar:'كل 60,000–90,000 كم أو 4–5 سنين، ومعاه البلية وطرمبة المية.',en:'Every 60,000–90,000 km or 4–5 years, together with the tensioner and water pump.',
+    car:{aveo:{km:60000,mo:48,ar:'Aveo 1.5: كل 60,000 كم أو 4 سنين مع البلية والطرمبة. الموتور ده لو السير اتقطع بيبوظ، فما تتأخرش عليه.',en:'Aveo 1.5: every 60,000 km or 4 years with the tensioner and water pump. A snapped belt damages this engine, so don\'t run late.'},
+         astra:{km:90000,mo:72,ar:'Astra J 1.6: المصنع بيقول 150,000 كم أو 10 سنين، بس في الحر والزحمة الأحسن 90,000 كم مع البلية والطرمبة.',en:'Astra J 1.6: the factory says 150,000 km or 10 years, but in heat and traffic 90,000 km is safer, with the tensioner and water pump.'}}},
+  {re:/دينامو|alternator|accessory|serpentine/i,km:50000,mo:0,ar:'كل 40,000–60,000 كم، أو بدري لو بيزيّق أو فيه شروخ.',en:'Every 40,000–60,000 km, or sooner if it squeals or shows cracks.'},
+  {re:/ردياتير|coolant|antifreeze/i,km:40000,mo:24,ar:'كل 40,000 كم أو سنتين (الكتالوج 45,000 كم أو 3 سنين).',en:'Every 40,000 km or 2 years (the manual says 45,000 km or 3 years).'},
+  {re:/تيل.*خلف|rear.*pad/i,km:50000,mo:0,ar:'التيل الخلفي: كل 40,000–60,000 كم حسب السواقة.',en:'Rear brake pads: every 40,000–60,000 km depending on driving.'},
+  {re:/تيل|brake pad/i,km:30000,mo:0,ar:'التيل الأمامي: كل 20,000–40,000 كم حسب السواقة، والأحسن يتكشف عليه مع كل تغيير زيت.',en:'Front brake pads: every 20,000–40,000 km depending on driving; best checked at every oil change.'},
+  {re:/طنابير|طنبور|disc|rotor/i,km:60000,mo:0,ar:'كل 60,000–80,000 كم، أو مع تاني تغيير للتيل.',en:'Every 60,000–80,000 km, or with every second pad change.'},
+  {re:/بطاري|battery/i,km:0,mo:30,ar:'كل سنتين لـ 3 في الحر.',en:'Every 2–3 years in hot weather.'},
+  {re:/كاوتش|إطار|tire|tyre/i,km:50000,mo:60,ar:'كل 40,000–60,000 كم أو 5 سنين من تاريخ الصنع، اللي ييجي الأول.',en:'Every 40,000–60,000 km or 5 years from the manufacture date, whichever comes first.'}
+];
+function guideFor(name,car){
+  const row=name&&SV_GUIDE.find(r=>r.re.test(name));if(!row)return null;
+  const key=car&&(/aveo/i.test(car.name)?'aveo':/astra/i.test(car.name)?'astra':null),o=key&&row.car&&row.car[key]||{};
+  return {km:o.km??row.km,mo:o.mo??row.mo,ar:o.ar||row.ar,en:o.en||row.en};
+}
+// What the user last chose for a service on a car becomes that car's usual from then on.
+// Keyed by guide row when the name matches one, so "زيت وفلتر" and "تغيير زيت" share it.
+const prefKey=name=>{const row=SV_GUIDE.find(r=>r.re.test(name));return row?'g:'+row.re.source:'n:'+name};
+const prefFor=(car,name)=>car&&name&&car.prefs?car.prefs[prefKey(name)]:null;
+function setPref(car,name,km,mo){car.prefs=car.prefs||{};car.prefs[prefKey(name)]={km:km||0,mo:mo||0}}
+const prefText=p=>LANG==='en'
+  ?[p.km?`every ${fmt(p.km,0)} km`:'',p.mo?`${p.km?'or ':'every '}${p.mo} months`:''].filter(Boolean).join(' ')
+  :[p.km?`كل ${fmt(p.km,0)} كم`:'',p.mo?`${p.km?'أو ':'كل '}${p.mo} ${moW(p.mo)}`:''].filter(Boolean).join(' ');
+function showGuide(el,name,car){
+  const g=guideFor(name,car),p=prefFor(car,name),lines=[];
+  if(p&&(p.km||p.mo))lines.push(`<b>${LANG==='en'?'Your choice for this car':'اختيارك للعربية دي'}:</b> ${esc(prefText(p))}`);
+  if(g)lines.push(`<b>${LANG==='en'?'Usual':'المعتاد'}:</b> ${esc(LANG==='en'?g.en:g.ar)}`);
+  $(el).hidden=!lines.length;$(el).innerHTML=lines.join('<br>');return g}
+// the reminder box suggests the existing reminder, else the usual interval, until the user touches it
+let remTouched=false;
+function svGuide(){
+  const car=cars.find(c=>c.id===svCar),name=$('sName').value.trim(),g=showGuide('sHint',name,car),m=car&&car.maint.find(x=>x.name.trim()===name);
+  if(!remTouched){
+    const p=prefFor(car,name);
+    const v=m?{on:true,km:m.every,mo:m.months}:p&&(p.km||p.mo)&&!svEdit?{on:true,km:p.km,mo:p.mo}:g&&(g.km||g.mo)&&!svEdit?{on:true,km:g.km,mo:g.mo}:{on:false,km:0,mo:0};
+    $('sRem').checked=v.on;$('sRemKm').value=v.km||'';$('sRemMo').value=v.mo||'';
+  }
+  $('sRem').closest('.remind').classList.toggle('off',!$('sRem').checked);
+}
+$('sName').addEventListener('input',svGuide);
+$('sRem').addEventListener('change',()=>{remTouched=true;svGuide()});
+['sRemKm','sRemMo'].forEach(id=>$(id).addEventListener('input',()=>{remTouched=true}));
+$('mName').addEventListener('input',()=>showGuide('mHint',$('mName').value.trim(),curCar()));
 function fillSug(){const ns=[...new Set([...services.map(s=>s.name),...cars.flatMap(c=>c.maint.map(m=>m.name)),...SV_NAMES])];
   $('mtSug').innerHTML=ns.map(n=>`<option value="${esc(n)}">`).join('')}
 function svLive(){const t=(Number($('sParts').value)||0)+(Number($('sLabor').value)||0);
@@ -862,7 +953,7 @@ function openSvc(id,pre,fromRef=false){
   $('sParts').value=s&&s.parts?s.parts:'';$('sLabor').value=s&&s.labor?s.labor:'';$('sNotes').value=s?s.notes:'';
   const cur=curOdo(car.id);$('sOdo').placeholder=Number.isFinite(cur)?String(cur):'';
   $('sErr').hidden=true;$('sSaveMore').hidden=!!s;$('sDel').hidden=!s;$('sDel').className='btn del';$('sDel').textContent='امسح';
-  fillSug();svLive();openS('svSheet');
+  remTouched=false;svGuide();fillSug();svLive();openS('svSheet');
   if(!s)setTimeout(()=>$(p.name?'sParts':'sName').focus(),250);
 }
 function saveSvc(more){
@@ -872,15 +963,22 @@ function saveSvc(more){
   if(!date)return fail('اكتب التاريخ.');
   if(!name)return fail('اكتب نوع الصيانة.');
   if(parts<0||labor<0)return fail('المبالغ لازم تكون موجبة.');
+  const remOn=$('sRem').checked,rk=Number($('sRemKm').value)||0,rm=Number($('sRemMo').value)||0;
+  if(remOn&&!(rk>0)&&!(rm>0))return fail('اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.');
   const rec={car:car.id,date,odo,name,parts:r2(parts),labor:r2(labor),notes,u:Date.now()};
   if(svEdit)Object.assign(services.find(s=>s.id===svEdit),rec);
   else services.push({...rec,id:'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)});
   // a reminder with the same name restarts from this service
   let msg=svEdit?'اتعدّلت':'اتسجّلت';
   const m=car.maint.find(m=>m.name.trim()===name);
-  if(m&&odo>m.last){m.last=odo;car.u=Date.now();msg+=` · تذكير ${m.name} اتحدّث`}
+  if(remOn){
+    setPref(car,name,rk,rm);
+    if(m){m.every=rk;m.months=rm;if(odo>m.last)m.last=odo;if(date>(m.lastDate||''))m.lastDate=date;msg+=` · تذكير ${m.name} اتحدّث`}
+    else{const cur=curOdo(car.id);car.maint.push({id:'m'+Date.now().toString(36),name,every:rk,months:rm,last:odo||(Number.isFinite(cur)?cur:0),lastDate:date});msg+=' · اتعمل تذكير'}
+    car.u=Date.now();
+  }else if(m&&(odo>m.last||date>(m.lastDate||''))){if(odo>m.last)m.last=odo;if(date>(m.lastDate||''))m.lastDate=date;car.u=Date.now();msg+=` · تذكير ${m.name} اتحدّث`}
   if(!save())return;render();toast(msg);
-  if(more){$('sName').value='';$('sParts').value='';$('sLabor').value='';$('sNotes').value='';svLive();fillSug();$('sName').focus();return}
+  if(more){$('sName').value='';$('sParts').value='';$('sLabor').value='';$('sNotes').value='';remTouched=false;svGuide();svLive();fillSug();$('sName').focus();return}
   svEdit=null;svDone();
 }
 // back to the maintenance reference if that's where the edit started
@@ -935,19 +1033,23 @@ function openMt(id){
   const car=curCar();if(!car)return;const m=id?car.maint.find(x=>x.id===id):null;mtEdit=m?m.id:null;armedMtDel=null;
   $('mshT').textContent=m?'تعديل تذكير':'تذكير صيانة';$('mshcar').textContent=car.name;fillSug();
   const cur=curOdo(car.id);
-  $('mName').value=m?m.name:'';$('mEvery').value=m?m.every:'';$('mLast').value=m?m.last:(Number.isFinite(cur)?cur:'');
+  $('mName').value=m?m.name:'';$('mEvery').value=m&&m.every?m.every:'';$('mLast').value=m?m.last:(Number.isFinite(cur)?cur:'');
+  $('mMonths').value=m&&m.months?m.months:'';$('mLastDate').value=m&&m.lastDate?m.lastDate:today();
+  showGuide('mHint',$('mName').value.trim(),car);
   $('mErr').hidden=true;$('mDel').hidden=!m;$('mDel').className='btn del';$('mDel').textContent='امسح';
   openS('mtSheet');
 }
 $('mtAdd').onclick=()=>openMt(null);
 $('mtForm').onsubmit=e=>{
   e.preventDefault();const car=curCar(),fail=t=>{$('mErr').textContent=t;$('mErr').hidden=false};
-  const name=$('mName').value.trim(),every=Number($('mEvery').value),last=Number($('mLast').value);
+  const name=$('mName').value.trim(),every=Number($('mEvery').value)||0,months=Number($('mMonths').value)||0,last=Number($('mLast').value),lastDate=$('mLastDate').value;
   if(!name)return fail('اكتب نوع الصيانة.');
-  if(!(every>0))return fail('اكتب كل كام كيلو.');
-  if($('mLast').value===''||!(last>=0))return fail('اكتب العداد آخر مرة اتعملت.');
-  if(mtEdit)Object.assign(car.maint.find(m=>m.id===mtEdit),{name,every,last});
-  else car.maint.push({id:'m'+Date.now().toString(36),name,every,last});
+  if(!(every>0)&&!(months>0))return fail('اكتب كل كام كيلو أو كل كام شهر.');
+  if(every>0&&($('mLast').value===''||!(last>=0)))return fail('اكتب العداد آخر مرة اتعملت.');
+  if(months>0&&!lastDate)return fail('اكتب تاريخ آخر مرة.');
+  const v={name,every,months,last:last||0,lastDate};setPref(car,name,every,months);
+  if(mtEdit)Object.assign(car.maint.find(m=>m.id===mtEdit),v);
+  else car.maint.push({id:'m'+Date.now().toString(36),...v});
   car.u=Date.now();if(!save())return;closeS();render();toast('اتحفظت');
 };
 $('mDel').onclick=()=>{
@@ -992,8 +1094,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeS()});
 // ---- storage (data lives on this phone) ----
 // v1 data had one price per car and no full/partial flag: old fills take the car's price and count as full tanks.
 function normalize(d){
-  const cs=d.cars.map(c=>({id:String(c.id),name:String(c.name||'عربية'),price:Number(c.price)||0,order:Number(c.order)||0,good:Number(c.good)||9,bad:Number(c.bad)||12,u:Number(c.u)||0,
-    maint:Array.isArray(c.maint)?c.maint.map(m=>({id:String(m.id),name:String(m.name),every:Number(m.every)||0,last:Number(m.last)||0})).filter(m=>m.every>0):[]}));
+  const cs=d.cars.map(c=>({id:String(c.id),name:String(c.name||'عربية'),price:Number(c.price)||0,order:Number(c.order)||0,good:Number(c.good)||9,bad:Number(c.bad)||12,u:Number(c.u)||0,prefs:c.prefs&&typeof c.prefs==='object'?c.prefs:{},
+    maint:Array.isArray(c.maint)?c.maint.map(m=>({id:String(m.id),name:String(m.name),every:Number(m.every)||0,last:Number(m.last)||0,months:Number(m.months)||0,lastDate:m.lastDate?String(m.lastDate):''})).filter(m=>m.every>0||m.months>0):[]}));
   const fs=(Array.isArray(d.fills)?d.fills:[]).map(f=>{const c=cs.find(c=>c.id===f.car);if(!c)return null;
     return {id:String(f.id),car:c.id,date:String(f.date),odo:Number(f.odo),money:Number(f.money),price:Number(f.price)>0?Number(f.price):c.price,full:f.full!==false,u:Number(f.u)||0}}).filter(Boolean);
   const sv=(Array.isArray(d.services)?d.services:[]).map(s=>{const c=cs.find(c=>c.id===s.car);if(!c)return null;
@@ -1213,7 +1315,13 @@ const EN={
   'مثلاً: نوع الزيت، اسم الميكانيكي، الضمان…':'e.g. oil type, mechanic, warranty…','الإجمالي':'Total','احفظ وزوّد بند تاني في نفس اليوم':'Save and add another item for the same day',
   'اكتب التاريخ.':'Enter the date.','اكتب نوع الصيانة.':'Enter the service type.','المبالغ لازم تكون موجبة.':'Amounts must be positive.',
   'تذكير صيانة':'Service reminder','تعديل تذكير':'Edit reminder','كل كام كم':'Every (km)','آخر مرة على عداد':'Last done at (km)','اكتب كل كام كيلو.':'Enter the interval in km.','اكتب العداد آخر مرة اتعملت.':'Enter the odometer when it was last done.',
-  'التطبيق بيقارن بآخر قراءة عداد، وينبّهك لما يفضل 10% من المسافة. ولما تسجّل صيانة بنفس الاسم، التذكير بيتحدّث لوحده.':'The app compares with the latest odometer reading and alerts you when 10% of the distance is left. Logging a service with the same name updates the reminder by itself.',
+  'التطبيق بينبّهك قبل الميعاد بـ 500 كم أو بشهر. ولما تسجّل صيانة بنفس الاسم، التذكير بيتحدّث لوحده.':'The app alerts you 500 km or one month before it is due. Logging a service with the same name updates the reminder by itself.',
+  'فكّرني بيها تاني':'Remind me again','بعد':'In','كم أو':'km or','شهر':'months','شهور':'months','يوم':'days','أيام':'days','أو':'or',
+  'اللي ييجي الأول. سيب أي خانة فاضية لو مش عايزها.':"Whichever comes first. Leave a box empty if you don't need it.",
+  'أو كل كام شهر':'Or every (months)','آخر مرة يوم':'Last done on','كم · فاضل':'km · in','كم · متأخر':'km · overdue by',
+  'شهور · آخر مرة على':'months · last at','شهر · آخر مرة على':'months · last at',
+  'اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.':'Enter after how many km or months, or untick the reminder.',
+  'اكتب كل كام كيلو أو كل كام شهر.':'Enter an interval in km or months.','اكتب تاريخ آخر مرة.':'Enter the date it was last done.',
   // welcome
   'أهلاً بيك في دفتر البنزين':'Welcome to Fuel Log','+ زوّد عربيتك':'+ Add your car','عندي نسخة احتياطية، رجّعها':'I have a backup, restore it','بياناتي على GitHub، اربطها':'My data is on GitHub, connect it',
   'ابدأ بإضافة عربيتك، وبعدها سجّل كل تفويلة والتطبيق هيحسبلك الاستهلاك وتكلفة الكيلو. بياناتك بتتخزن على موبايلك ده بس، ومحدش غيرك بيشوفها.':'Start by adding your car, then log every fill-up and the app works out your consumption and cost per km. Your data is stored on this phone only; nobody else can see it.'
@@ -1226,7 +1334,8 @@ const EN_RX=[
   [/^· (.+) — فاضل$/,'· $1 — in'],[/^· (.+) — متأخر$/,'· $1 — overdue by'],[/^كم من فُل تانك (.+)$/,'km since the full tank of $1'],
   [/^(اتسجّلت|اتعدّلت) · سعر اللتر بقى ([\d.,]+)$/,(m,a,p)=>`${T(a)} · price per liter is now ${p}`],[/^(اتسجّلت|اتعدّلت) · تذكير (.+) اتحدّث$/,(m,a,n)=>`${T(a)} · reminder "${n}" updated`],
   [/^اترجّع (\d+) تفويلة و(\d+) صيانة$/,'Restored $1 fill-ups and $2 services'],[/^هيتمسح معاها (\d+) تفويلة و(\d+) صيانة\. متأكد؟$/,'This also deletes $1 fill-ups and $2 services. Sure?'],
-  [/^الإجمالي على (.+):$/,'Total on $1:'],[/^التعديلات لسه ما اترفعتش على GitHub: (.+)\.$/,(m,e)=>`Changes not uploaded to GitHub yet: ${T(e)}.`],
+  [/^الإجمالي على (.+):$/,'Total on $1:'],[/^(اتسجّلت|اتعدّلت) · اتعمل تذكير$/,(m,a)=>`${T(a)} · reminder created`],
+  [/^(كم|شهر|شهور) · آخر مرة (.+)$/,(m,u,d)=>`${T(u)} · last ${d}`],[/^التعديلات لسه ما اترفعتش على GitHub: (.+)\.$/,(m,e)=>`Changes not uploaded to GitHub yet: ${T(e)}.`],
   [/^آخر نسخة: (.+) \(من$/,'Last backup: $1 ('],[/^(?:يوم|أيام)\)\. بياناتك .+$/,'days ago). '+BK],[/^آخر نسخة: (.+) \(النهارده\)\. بياناتك .+$/,'Last backup: $1 (today). '+BK],
   [/^(.+)\.$/,(m,e)=>EN[e]?EN[e]+'.':m]   // an error message with a full stop added
 ];
