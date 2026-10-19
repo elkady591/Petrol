@@ -153,6 +153,9 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .remsug b{color:var(--ink);font-weight:600}
 .rrow input::placeholder{color:var(--muted);opacity:.4}
 .remind.off .rrow,.remind.off .hint{opacity:.45;pointer-events:none}
+.brand{vertical-align:middle;margin-inline-end:7px;flex:none;position:relative;top:-1px}
+.brand.opel{width:28px;height:18px}
+.brand.chevy{width:34px;height:13px}
 .welcome{display:grid;gap:12px}
 .welcome h2{font-size:17px;margin:0}
 .welcome p{margin:0;color:var(--muted);font-size:14px}
@@ -563,6 +566,14 @@ $('today').textContent=(()=>{const d=new Date();return `${DAYS[d.getDay()]} ${d.
 (()=>{let h='';for(let v=G_MIN;v<=G_MAX;v+=4){const a=Math.PI*(1-(v-G_MIN)/(G_MAX-G_MIN));const tx=120+72*Math.cos(a),ty=125-72*Math.sin(a);
   h+=`<text x="${tx.toFixed(1)}" y="${(ty+4).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="var(--f-body)">${v}</text>`}$('ticks').innerHTML=h})();
 
+// Make badge next to the car name, picked from the name (drawn inline, no image files)
+const BRANDS=[
+  // the official 2023 Opel emblem (Wikimedia Commons, public domain), in the text colour so it shows on any background
+  [/opel|vauxhall|اوبل|أوبل|astra|استرا|أسترا/i,`<svg class="brand opel" viewBox="-2 -2 458 286" aria-hidden="true" fill="currentColor"><path d="M454.15,166.89l-248.65-27h-.06l-68.06,35.6a.1.1,0,0,0,0,.19h300.4l16.36-8.54a.13.13,0,0,0,.13-.12.12.12,0,0,0-.12-.13Z"/><path d="M229,10A129.94,129.94,0,0,1,358.91,139.93c0,2.2-.05,4.38-.16,6.56l10,1.08c.14-2.53.21-5.07.21-7.64A140,140,0,0,0,96.7,94.2h10.67A130,130,0,0,1,229,10Z"/><path d="M229,269.87A129.94,129.94,0,0,1,99,139.93c0-2.21.06-4.4.17-6.59l-10-1.08q-.21,3.81-.21,7.67a140,140,0,0,0,272.28,45.7H350.6A130,130,0,0,1,229,269.87Z"/><path d="M252.44,139.9h.05l68.07-35.5a.1.1,0,0,0,.06-.13.09.09,0,0,0-.06-.06H20.12L3.78,112.75a.1.1,0,0,0,0,.19Z"/></svg>`],
+  // the gold-and-chrome Chevrolet bowtie (Wikimedia Commons, public domain), cropped to the badge
+  [/chevrolet|chevy|شيفروليه|شيفرولية|شيفورليه|aveo|افيو|أفيو|cruze|lanos|optra/i,`<img class="brand chevy" src="brand-chevrolet.svg" alt="">`]
+];
+const brandIcon=name=>{const b=BRANDS.find(([re])=>re.test(name||''));return b?b[1]:''};
 const curCar=()=>cars.find(c=>c.id===current);
 const fillsOf=id=>fills.filter(f=>f.car===id).sort((a,b)=>a.odo-b.odo);
 const servicesOf=id=>services.filter(s=>s.car===id).sort((a,b)=>b.date.localeCompare(a.date)||b.odo-a.odo);
@@ -627,7 +638,7 @@ function render(){
   document.body.classList.toggle('nocar',!cars.length);$('welcome').hidden=!!cars.length;
   renderAlerts();
   $('cars').style.setProperty('--cols',Math.max(cars.length,1));
-  $('cars').innerHTML=cars.map(c=>`<button type="button" aria-pressed="${c.id===current}" data-id="${esc(c.id)}">${esc(c.name)}</button>`).join('');
+  $('cars').innerHTML=cars.map(c=>`<button type="button" aria-pressed="${c.id===current}" data-id="${esc(c.id)}">${brandIcon(c.name)}${esc(c.name)}</button>`).join('');
   const opts=periodOptions(); if(!opts.some(o=>o[0]===period))period='all';
   $('periods').innerHTML=opts.map(([k,l])=>`<button type="button" aria-pressed="${k===period}" data-p="${k}">${l}</button>`).join('');
   const car=curCar(),{rows,s,spent,liters}=stats(current);
@@ -834,7 +845,7 @@ function themeNow(){let t='auto';try{t=localStorage.getItem('theme')||'auto'}cat
 function applyTheme(t){ls('theme',t);if(t==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;renderSettings()}
 function renderSettings(){
   const t=themeNow();$('themeSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
-  $('carList').innerHTML=cars.map(c=>`<button class="crow" type="button" data-car="${esc(c.id)}"><span><b>${esc(c.name)}</b><span>سعر اللتر <span class="n">${fmt(c.price,2)}</span> · كويس تحت <span class="n">${fmt(c.good,1)}</span> · عالي من <span class="n">${fmt(c.bad,1)}</span></span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>`).join('');
+  $('carList').innerHTML=cars.map(c=>`<button class="crow" type="button" data-car="${esc(c.id)}"><span><b>${brandIcon(c.name)}${esc(c.name)}</b><span>سعر اللتر <span class="n">${fmt(c.price,2)}</span> · كويس تحت <span class="n">${fmt(c.good,1)}</span> · عالي من <span class="n">${fmt(c.bad,1)}</span></span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>`).join('');
   $('cmpSec').hidden=cars.length<2;renderSync();
   $('langSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===LANG));
   const a=backupAge();
@@ -1004,7 +1015,7 @@ let refCar=null,refView='type',refOpen=null;
 function renderRef(){
   if(!cars.some(c=>c.id===refCar))refCar=current;
   $('refCars').style.setProperty('--cols',Math.max(cars.length,1));
-  $('refCars').innerHTML=cars.map(c=>`<button type="button" data-rc="${esc(c.id)}" aria-pressed="${c.id===refCar}">${esc(c.name)}</button>`).join('');
+  $('refCars').innerHTML=cars.map(c=>`<button type="button" data-rc="${esc(c.id)}" aria-pressed="${c.id===refCar}">${brandIcon(c.name)}${esc(c.name)}</button>`).join('');
   $('refView').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===refView));
   const q=$('refQ').value.trim(),list=servicesOf(refCar).filter(s=>!q||s.name.includes(q)||s.notes.includes(q)),cur=curOdo(refCar);
   $('refSum').innerHTML=list.length?`<span class="n">${list.length}</span> بند · إجمالي ${money(sum(list,svTotal))} ج`:'';
