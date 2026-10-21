@@ -172,8 +172,12 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .chip b{display:block;font-size:15.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chip small{opacity:.75;font-size:12px}
 .chip>svg{width:18px;height:18px;opacity:.8;flex:none}
-.tlsum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.tlsum div{background:rgba(255,255,255,.1);border-radius:12px;padding:8px 10px;min-width:0}
+.tlsum{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.tlsum>button{grid-column:span 2}.tlsum>button.w3{grid-column:span 3}
+.tlsum>button.tot{background:rgba(255,255,255,.2)}
+.tlsum>button{border:0;color:inherit;text-align:start;background:rgba(255,255,255,.1);border-radius:12px;padding:8px 10px;min-width:0}
+.tlsum .perpill{grid-column:1/-1;justify-self:start;display:flex;align-items:center;gap:4px;padding:4px 10px 4px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:rgba(255,255,255,.16)}
+.tlsum .perpill svg{width:15px;height:15px;opacity:.85}
 .tlsum span{display:block;font-size:11.5px;opacity:.75}
 .tlsum b{font-size:17px}.tlsum small{font-size:11px;opacity:.75}
 .tlsum .good b{color:#9BE3B8}.tlsum .warn b{color:#F3CF7A}.tlsum .bad b{color:#F7A49A}
@@ -201,6 +205,8 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .tnav svg{width:23px;height:23px}
 .tnav button.on{color:var(--petrol);font-weight:600}
 .tnav button.on span{background:color-mix(in srgb,var(--petrol) 16%,transparent)}
+.tnav span.badge{position:relative}
+.tnav span.badge:after{content:attr(data-n);position:absolute;top:-4px;inset-inline-end:8px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--bad);color:#fff;font-size:10.5px;font-weight:700;line-height:17px;text-align:center;font-family:var(--f-body)}
 .tnav .tfab{justify-self:center;width:58px;height:58px;border-radius:50%;background:var(--accent);color:var(--accent-ink);place-items:center;margin-top:-30px;box-shadow:0 6px 18px rgba(224,138,30,.4);border:4px solid var(--panel);padding:0}
 .tnav .tfab svg{width:26px;height:26px}
 .acts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-bottom:6px}
@@ -472,6 +478,12 @@ html{padding-top:0}
   </div>
 </div>
 
+<div class="sheet" id="perSheet" role="dialog" aria-modal="true" aria-labelledby="pph">
+  <div class="grab"></div>
+  <h3 id="pph">الأرقام عن أنهي فترة؟</h3>
+  <div class="clist" id="perList"></div>
+</div>
+
 <div class="sheet" id="carPick" role="dialog" aria-modal="true" aria-labelledby="cpk">
   <div class="grab"></div>
   <h3 id="cpk">اختار العربية</h3>
@@ -685,9 +697,10 @@ function inPeriod(date){
   return date.slice(0,7)===period;
 }
 const monthName=m=>MONTHS[+m.slice(5)-1]+' '+m.slice(0,4);
+const periodLabel=()=>period==='all'?'كل الفترة':period==='30'?'آخر 30 يوم':monthName(period);
 function periodOptions(){
   const ms=[...new Set(fillsOf(current).map(f=>f.date.slice(0,7)))].sort().reverse();
-  return [['all','كل الفترة'],['30','آخر 30 يوم'],...ms.map(m=>[m,monthName(m)])];
+  return [['all','كل الفترة'],...ms.map(m=>[m,monthName(m)])];
 }
 
 // Consumption is measured full tank → full tank: the liters of every fill after the last full
@@ -785,10 +798,18 @@ function render(){
 }
 
 function renderAlerts(){
-  const out=[];
-  cars.forEach(c=>{const cur=curOdo(c.id);
-    c.maint.forEach(m=>{const s=mtState(m,cur),st=s.st;if(st==='good')return;
-      out.push(`<div class="banner ${st}"><span>${st==='bad'?'جه ميعاد':'قرّب ميعاد'} <b>${esc(m.name)}</b> · ${esc(c.name)} — ${mtRemHTML(s)}</span><button class="btn ghost small" type="button" data-gocar="${esc(c.id)}">شوف</button></div>`)})});
+  const out=[],due=[];
+  cars.forEach(c=>{const cur=curOdo(c.id);c.maint.forEach(m=>{const s=mtState(m,cur);if(s.st!=='good')due.push({c,m,s,st:s.st})})});
+  due.sort((a,b)=>(a.st==='bad'?0:1)-(b.st==='bad'?0:1));
+  // the reminders tab badge counts what's due on the car on screen
+  const nCur=due.filter(d=>d.c.id===current).length,rb=$('tnav').querySelector('[data-tab=rem] span');
+  rb.dataset.n=nCur||'';rb.classList.toggle('badge',nCur>0);
+  // one banner per reminder; ✕ hides that one for a week, or until it goes from "coming up" to "due"
+  let hide={};try{hide=JSON.parse(localStorage.getItem('mtHide'))||{}}catch(_){}
+  if(Array.isArray(hide.ids))hide={};
+  due.forEach(d=>{const k=d.c.id+':'+d.m.id,h=hide[k];
+    if(h&&Date.now()-h.at<7*DAY&&!(h.st==='warn'&&d.st==='bad'))return;
+    out.push(`<div class="banner ${d.st}"><span>${d.st==='bad'?'جه ميعاد':'قرّب ميعاد'} <b>${esc(d.m.name)}</b> · ${esc(d.c.name)} — ${mtRemHTML(d.s)}</span><span class="bact"><button class="btn ghost small" type="button" data-gocar="${esc(d.c.id)}">شوف</button><button class="btn ghost small" type="button" data-mthide="${esc(k)}" data-st="${d.st}" aria-label="اخفي">✕</button></span></div>`)});
   if(syncOn()&&syncErr&&meta.sync.dirty)out.push(`<div class="banner warn"><span>التعديلات لسه ما اترفعتش على GitHub: ${syncErr}.</span><button class="btn ghost small" type="button" data-sy="1">جرّب تاني</button></div>`);
   if(backupDue()){const a=backupAge();
     out.push(`<div class="banner"><span>${a===null?'لسه ما خدتش نسخة احتياطية من بياناتك.':`آخر نسخة احتياطية من <span class="n">${a}</span> ${dayW(a)}.`}</span><span class="bact"><button class="btn pri small" type="button" data-bk="now">خد نسخة</button><button class="btn ghost small" type="button" data-bk="later">بعدين</button></span></div>`)}
@@ -895,12 +916,15 @@ function renderTL(){
   const on=syncOn();
   $('tlSync').innerHTML=`<svg><use href="#i-${on&&!syncErr?'cloud':'cloudoff'}"/></svg>`;
   $('tlSync').setAttribute('aria-label',on?(syncErr||'متزامن'):'المزامنة مقفولة');$('tlSync').style.color=on&&syncErr?'#F7A49A':'';
-  // headline numbers: all-time consumption and cost per km, and what this month cost so far
-  const all=stats(car.id,()=>true).s,m=today().slice(0,7),inM=d=>d.slice(0,7)===m;
-  const mFuel=sum(fills.filter(f=>f.car===car.id&&inM(f.date)),f=>f.money),mSv=sum(services.filter(s=>s.car===car.id&&inM(s.date)),svTotal);
-  $('tlSum').innerHTML=`<div class="${all?band(all.l100,car)[0]:''}"><span>الاستهلاك</span><b class="n">${all?fmt(all.l100):'—'}</b> <small>ل/100</small></div>
-    <div><span>تكلفة الكيلو</span><b class="n">${all?fmt(all.epk,2):'—'}</b> <small>ج</small></div>
-    <div><span>${MONTHS[+m.slice(5)-1]}</span><b class="n">${fmt(mFuel+mSv,0)}</b> <small>ج</small></div>`;
+  // headline numbers for the chosen period (the same period as Reports); tap any of them to change it
+  if(!periodOptions().some(o=>o[0]===period))period='all';
+  const ps=stats(car.id).s,fuel=sum(fills.filter(f=>f.car===car.id&&inPeriod(f.date)),f=>f.money),mnt=sum(services.filter(s=>s.car===car.id&&inPeriod(s.date)),svTotal);
+  $('tlSum').innerHTML=`<button type="button" class="perpill" data-per>${esc(periodLabel())}<svg><use href="#i-chev"/></svg></button>
+    <button type="button" data-per class="w3 ${ps?band(ps.l100,car)[0]:''}"><span>الاستهلاك</span><b class="n">${ps?fmt(ps.l100):'—'}</b> <small>ل/100</small></button>
+    <button type="button" data-per class="w3"><span>تكلفة الكيلو</span><b class="n">${ps?fmt(ps.epk,2):'—'}</b> <small>ج</small></button>
+    <button type="button" data-per><span>بنزين</span><b class="n">${fmt(fuel,0)}</b> <small>ج</small></button>
+    <button type="button" data-per><span>صيانة</span><b class="n">${fmt(mnt,0)}</b> <small>ج</small></button>
+    <button type="button" data-per class="tot"><span>الإجمالي</span><b class="n">${fmt(fuel+mnt,0)}</b> <small>ج</small></button>`;
   // one road: fills (with their consumption) and services, grouped by month
   const ch=chain(fillsOf(car.id));
   const items=[...ch.map(r=>({k:'f',date:r.date,odo:r.odo,r})),...servicesOf(car.id).map(s=>({k:'s',date:s.date,odo:s.odo,s}))]
@@ -947,6 +971,10 @@ $('tnav').onclick=e=>{
 $('addFill').onclick=()=>openFill(null);
 $('addSvc').onclick=()=>openSvc(null);
 $('tlSet').onclick=openSettings;
+$('tlSum').onclick=e=>{if(!e.target.closest('[data-per]'))return;
+  $('perList').innerHTML=periodOptions().map(([k,l])=>`<button class="crow" type="button" data-pp="${k}"><b>${l}</b>${k===period?'<span style="color:var(--good);font-weight:700">✓</span>':''}</button>`).join('');
+  openS('perSheet')};
+$('perList').onclick=e=>{const b=e.target.closest('[data-pp]');if(!b)return;period=b.dataset.pp;sel=null;ls('period',period);closeS();render()};
 $('tlSync').onclick=()=>{if(syncOn()){sync();toast(syncErr||'بيتزامن…')}else openSync()};
 $('tlChip').onclick=()=>{
   $('cpList').innerHTML=cars.map(c=>`<button class="crow" type="button" data-pick="${esc(c.id)}"><span style="display:flex;align-items:center;gap:10px">${carLogo(c)}<b>${esc(c.name)}</b></span>${c.id===current?'<span style="color:var(--good);font-weight:700">✓</span>':''}</button>`).join('');
@@ -1281,7 +1309,11 @@ $('fills').onclick=e=>{
 };
 $('alerts').onclick=e=>{
   const g=e.target.closest('[data-gocar]');
-  if(g){current=g.dataset.gocar;ls('car',current);sel=openId=armed=null;render();$('mtCard').scrollIntoView({behavior:'smooth',block:'center'});return}
+  if(g){current=g.dataset.gocar;ls('car',current);sel=openId=armed=null;
+    if(layout==='tl'){tab='rem';ls('tab',tab);applyLayout();render();scrollTo(0,0)}else{render();$('mtCard').scrollIntoView({behavior:'smooth',block:'center'})}return}
+  const hd=e.target.closest('[data-mthide]');
+  if(hd){let h={};try{h=JSON.parse(localStorage.getItem('mtHide'))||{}}catch(_){}if(Array.isArray(h.ids))h={};
+    h[hd.dataset.mthide]={at:Date.now(),st:hd.dataset.st};ls('mtHide',JSON.stringify(h));renderAlerts();toast('اتخفى، والميعاد لسه في التذكيرات');return}
   if(e.target.closest('[data-sy]')){sync();return}
   const b=e.target.closest('[data-bk]');if(!b)return;
   if(b.dataset.bk==='now')doBackup();else{meta.snooze=Date.now();store();render()}
@@ -1528,6 +1560,8 @@ const EN={
   'شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
   'تفويلة':'Fill-up','اختار العربية':'Choose a car','امسح التفويلة':'Delete fill-up','الاستهلاك':'Consumption','ل/100':'L/100','آخر عداد':'Odometer','لسه مفيش قراءة عداد':'No odometer reading yet',
   'التفويلة الجاية تقريبًا':'Next fill-up, roughly','على عداد ~':'at ~','بمتوسط':'averaging','كم/يوم':'km/day','بنزين':'Fuel','· صيانة':'· maintenance','عداد':'odometer','اعرض الأقدم':'Show older',
+'اخفي':'Hide','اتخفى، والميعاد لسه في التذكيرات':'Hidden — it is still in Reminders',
+  'الأرقام عن أنهي فترة؟':'Numbers for which period?',
   'تفويلة ·':'Fill-up ·','فُل تانك':'Full tank','ج/كم':'EGP/km',
   'دوس على + تحت عشان تسجّل أول تفويلة أو صيانة.':'Tap + below to log your first fill-up or service.','متزامن':'Synced','المزامنة مقفولة':'Sync is off','بيتزامن…':'Syncing…',
   // welcome
