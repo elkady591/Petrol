@@ -156,6 +156,58 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .brand{vertical-align:middle;margin-inline-end:7px;flex:none;position:relative;top:-1px}
 .brand.opel{width:28px;height:18px}
 .brand.chevy{width:34px;height:13px}
+/* ===== timeline layout (body.lay-tl, picked in settings); body[data-tab] says which tab shows ===== */
+.tlhead,.tnav,#tl{display:none}
+.lay-tl .mast .top,.lay-tl #cars,.lay-tl #mline,.lay-tl .dock,.lay-tl [data-t=classic]{display:none!important}
+.lay-tl .tlhead{display:grid;gap:14px}
+.lay-tl #tl{display:block}
+.lay-tl:not([data-tab=hist]) [data-t=hist],.lay-tl:not([data-tab=rep]) [data-t=rep],.lay-tl:not([data-tab=rem]) [data-t=rem]{display:none!important}
+.lay-tl[data-tab=rem] #svWrap,.lay-tl[data-tab=rem] #svAdd{display:none!important}
+.lay-tl[data-tab=rem] .twobtn{grid-template-columns:1fr}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.chip{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border:0;border-radius:14px;padding:7px 12px 7px 10px;color:var(--petrol-ink);text-align:start;min-width:0}
+.chip .lg{width:38px;height:38px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none;color:#1E4C5C}
+.chip .lg .brand{margin:0;top:0}.chip .lg .brand.chevy{width:30px;height:12px}.chip .lg .brand.opel{width:28px;height:18px}
+.chip .lg .ini{font-family:var(--f-display);font-weight:700;font-size:16px}
+.chip b{display:block;font-size:15.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip small{opacity:.75;font-size:12px}
+.chip>svg{width:18px;height:18px;opacity:.8;flex:none}
+.tlsum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tlsum div{background:rgba(255,255,255,.1);border-radius:12px;padding:8px 10px;min-width:0}
+.tlsum span{display:block;font-size:11.5px;opacity:.75}
+.tlsum b{font-size:17px}.tlsum small{font-size:11px;opacity:.75}
+.tlsum .good b{color:#9BE3B8}.tlsum .warn b{color:#F3CF7A}.tlsum .bad b{color:#F7A49A}
+.mon{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:14px 0 6px;font-weight:600;font-size:12.5px;color:var(--muted)}
+.mon b{color:var(--ink);font-size:14px}
+.tlr{position:relative;padding-inline-start:48px}
+.tlr:before{content:"";position:absolute;inset-inline-start:17px;top:0;bottom:0;width:7px;border-radius:4px;background:#36424d}
+.tlr:after{content:"";position:absolute;inset-inline-start:20px;top:8px;bottom:8px;width:1px;background:repeating-linear-gradient(#fff 0 6px,transparent 6px 12px)}
+.tli{position:relative;display:block;width:100%;text-align:start;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:11px 13px;margin-bottom:10px;color:var(--ink)}
+.tli .dot{position:absolute;inset-inline-start:-48px;top:10px;width:41px;height:41px;border-radius:50%;display:grid;place-items:center;border:3px solid var(--bg);z-index:1;color:#fff}
+.tli .dot svg{width:19px;height:19px}
+.dot.f{background:var(--accent)}.dot.s{background:var(--petrol)}
+.tli .r1,.tli .r2{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tli .r1 b{font-size:15px;font-weight:600}.tli .r1 .m{font-weight:700;font-size:16px;white-space:nowrap}
+.tli .r2{color:var(--muted);font-size:12.5px;margin-top:2px}
+.tli .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tli .nt{display:block;font-size:12px;color:var(--muted);margin-top:4px;white-space:pre-line}
+.tli.next{border-style:dashed;background:transparent}
+.tli.next .dot{background:var(--panel);border-color:var(--line);color:var(--accent)}
+#tlMore{margin:4px 0 0}
+.tnav{position:fixed;inset-inline:0;bottom:0;z-index:5;background:var(--panel);border-top:1px solid var(--line);grid-template-columns:repeat(5,minmax(0,1fr));align-items:end;padding:6px 6px calc(8px + env(safe-area-inset-bottom,0px))}
+.lay-tl .tnav{display:grid}
+.tnav button{border:0;background:none;display:grid;justify-items:center;gap:2px;font-size:11.5px;color:var(--muted);padding:2px 0}
+.tnav button span{display:grid;place-items:center;padding:3px 16px;border-radius:14px}
+.tnav svg{width:23px;height:23px}
+.tnav button.on{color:var(--petrol);font-weight:600}
+.tnav button.on span{background:color-mix(in srgb,var(--petrol) 16%,transparent)}
+.tnav .tfab{justify-self:center;width:58px;height:58px;border-radius:50%;background:var(--accent);color:var(--accent-ink);place-items:center;margin-top:-30px;box-shadow:0 6px 18px rgba(224,138,30,.4);border:4px solid var(--panel);padding:0}
+.tnav .tfab svg{width:26px;height:26px}
+.acts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-bottom:6px}
+.acts button{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:18px 8px;font-weight:600;font-size:15px;color:var(--ink)}
+.acts i{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;margin:0 auto 8px;color:#fff}
+.acts i svg{width:26px;height:26px}.acts .af{background:var(--accent)}.acts .as{background:var(--petrol)}
+.nocar .tnav,.nocar .tlsum,.nocar #tlChip{display:none!important}
 .welcome{display:grid;gap:12px}
 .welcome h2{font-size:17px;margin:0}
 .welcome p{margin:0;color:var(--muted);font-size:14px}
@@ -306,9 +358,16 @@ html{padding-top:0}
   </div>
   <nav class="seg" id="cars" aria-label="العربية"></nav>
   <div class="mline" id="mline"></div>
+  <!-- timeline layout header: car chip, sync state, settings, three headline numbers -->
+  <div class="tlhead">
+    <div class="hrow"><button class="chip" type="button" id="tlChip"></button>
+      <div class="topr"><button class="iconbtn" type="button" id="tlSync"></button><button class="iconbtn" type="button" id="tlSet" aria-label="الإعدادات"><svg><use href="#i-gear"/></svg></button></div></div>
+    <div class="tlsum" id="tlSum"></div>
+  </div>
   </header>
 
-  <div class="alerts" id="alerts"></div>
+  <div class="alerts" id="alerts" data-t="hist"></div>
+  <section id="tl" data-t="hist"></section>
 
   <section class="card welcome" id="welcome" hidden>
     <h2>أهلاً بيك في دفتر البنزين</h2>
@@ -318,9 +377,9 @@ html{padding-top:0}
     <button class="btn ghost wide" type="button" id="wSync">بياناتي على GitHub، اربطها</button>
   </section>
 
-  <nav class="periods" id="periods" aria-label="الفترة"></nav>
+  <nav class="periods" id="periods" aria-label="الفترة" data-t="rep"></nav>
 
-  <section class="card hero" aria-label="متوسط الاستهلاك">
+  <section class="card hero" aria-label="متوسط الاستهلاك" data-t="rep">
     <div class="gwrap">
       <svg viewBox="0 0 240 140" aria-hidden="true">
         <path d="M20 125 A100 100 0 0 1 220 125" fill="none" stroke="var(--track)" stroke-width="16" stroke-linecap="round"/>
@@ -347,29 +406,29 @@ html{padding-top:0}
     </div>
   </section>
 
-  <section class="stats" id="stats" aria-label="أرقام الفترة"></section>
+  <section class="stats" id="stats" aria-label="أرقام الفترة" data-t="rep"></section>
 
-  <section class="card" aria-labelledby="ch">
+  <section class="card" aria-labelledby="ch" data-t="rep">
     <h2 id="ch">استهلاك كل تفويلة <small>دوس على أي عمود</small></h2>
     <div class="chart" id="chart"></div>
     <div class="xl" id="xl"></div>
     <div class="detail" id="detail" hidden></div>
   </section>
 
-  <section class="card" id="monthCard" aria-labelledby="mch">
+  <section class="card" id="monthCard" aria-labelledby="mch" data-t="rep">
     <h2 id="mch">مصروف البنزين الشهري <small id="mavg"></small></h2>
     <div class="chart short" id="mchart"></div>
     <div class="xl short" id="mxl"></div>
     <p class="note">دوس على أي شهر عشان تشوف أرقامه بس.</p>
   </section>
 
-  <section class="card" aria-labelledby="lh" style="padding-bottom:12px">
+  <section class="card" aria-labelledby="lh" style="padding-bottom:12px" data-t="classic">
     <h2 id="lh">السجل <small id="lcount"></small></h2>
     <div class="fills" id="fills"></div>
     <p class="note">الاستهلاك = اللترات ÷ الكيلومترات من آخر فُل تانك. لو فوّلت نص تانك شيل علامة «فُل تانك»، والتطبيق هيحسبها مع الفُل اللي بعدها.</p>
   </section>
 
-  <section class="card" id="mtCard" aria-labelledby="mth">
+  <section class="card" id="mtCard" aria-labelledby="mth" data-t="rem">
     <h2 id="mth">الصيانة <small id="svTotal"></small></h2>
     <div id="mtWrap"><h4 class="sub-h">مواعيد جاية <small id="mtodo"></small></h4><div class="mts" id="mts"></div></div>
     <div id="svWrap"><h4 class="sub-h">اللي اتعمل</h4><div class="svs" id="svs"></div>
@@ -381,7 +440,44 @@ html{padding-top:0}
 
 <div class="dock"><button class="fab" id="fab" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>تفويلة جديدة</button></div>
 
+<!-- timeline layout: bottom tabs with the add button in the middle -->
+<nav class="tnav" id="tnav">
+  <button type="button" data-tab="hist"><span><svg><use href="#i-list"/></svg></span>السجل</button>
+  <button type="button" data-tab="rep"><span><svg><use href="#i-chart"/></svg></span>التقارير</button>
+  <button type="button" class="tfab" id="tFab" aria-label="إضافة"><svg><use href="#i-plus"/></svg></button>
+  <button type="button" data-tab="rem"><span><svg><use href="#i-bell"/></svg></span>التذكيرات</button>
+  <button type="button" data-tab="more"><span><svg><use href="#i-more"/></svg></span>المزيد</button>
+</nav>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pump" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M3 21h13M7 7h5v4H7z"/><path d="M15 10h2a2 2 0 0 1 2 2v4a1.5 1.5 0 0 0 3 0V9l-3-3"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-2.5z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-5 3 3 5-7"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H8a5 5 0 1 1 1.1-9.9A6 6 0 0 1 20 11a4 4 0 0 1-2.5 8z"/><path d="m9 14 2 2 4-4"/></symbol>
+  <symbol id="i-cloudoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H8a5 5 0 1 1 1.1-9.9A6 6 0 0 1 20 11a4 4 0 0 1-2.5 8z"/><path d="M3 3l18 18"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+</svg>
+
 <div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="addSheet" role="dialog" aria-modal="true" aria-label="إضافة">
+  <div class="grab"></div>
+  <div class="acts">
+    <button type="button" id="addFill"><i class="af"><svg><use href="#i-pump"/></svg></i>تفويلة</button>
+    <button type="button" id="addSvc"><i class="as"><svg><use href="#i-wrench"/></svg></i>صيانة</button>
+  </div>
+</div>
+
+<div class="sheet" id="carPick" role="dialog" aria-modal="true" aria-labelledby="cpk">
+  <div class="grab"></div>
+  <h3 id="cpk">اختار العربية</h3>
+  <div class="clist" id="cpList"></div>
+  <button class="btn ghost wide" type="button" id="cpAdd">+ عربية جديدة</button>
+</div>
 
 <div class="sheet" id="fillSheet" role="dialog" aria-modal="true" aria-labelledby="fsh">
   <div class="grab"></div>
@@ -396,6 +492,7 @@ html{padding-top:0}
     <div class="live" id="live"></div>
     <div class="err" id="err" hidden></div>
     <button class="btn pri" type="submit" id="addBtn">سجّل</button>
+    <button class="btn del" type="button" id="fDel" hidden>امسح التفويلة</button>
   </form>
 </div>
 
@@ -405,6 +502,8 @@ html{padding-top:0}
   <div class="sec">
     <h4>المظهر</h4>
     <div class="seg mini" id="themeSeg" style="--cols:3"><button type="button" data-t="auto">زي الموبايل</button><button type="button" data-t="light">فاتح</button><button type="button" data-t="dark">داكن</button></div>
+    <h4 style="margin-top:14px">شكل التطبيق</h4>
+    <div class="seg mini" id="laySeg" style="--cols:2"><button type="button" data-lay="classic">الأساسي</button><button type="button" data-lay="tl">الخط الزمني</button></div>
     <h4 style="margin-top:14px">اللغة · Language</h4>
     <div class="seg mini" id="langSeg" style="--cols:2" data-user><button type="button" data-l="ar" lang="ar">العربية</button><button type="button" data-l="en" lang="en">English</button></div>
   </div>
@@ -681,7 +780,7 @@ function render(){
       <div><span class="l">لترات</span><span class="v n">${fmt(r.seg.L,2)}</span></div>
       <div><span class="l">كم/لتر</span><span class="v n">${fmt(r.kml)}</span></div>`}else $('detail').hidden=true;}
 
-  renderMonths();renderMaint();renderFills(rows,car);
+  renderMonths();renderMaint();renderFills(rows,car);renderTL();
   live();
 }
 
@@ -779,6 +878,85 @@ function renderFills(rows,car){
     </div>`}).join('');
 }
 
+// ---- timeline layout: fills and services on one road, newest first, a month at a time ----
+let layout='classic',tab='hist',tlMonths=6;
+try{layout=localStorage.getItem('layout')==='tl'?'tl':'classic';tab=['hist','rep','rem'].includes(localStorage.getItem('tab'))?localStorage.getItem('tab'):'hist'}catch(_){}
+function applyLayout(){
+  document.body.classList.toggle('lay-tl',layout==='tl');document.body.dataset.tab=tab;
+  $('tnav').querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+}
+const pumpSvg='<svg><use href="#i-pump"/></svg>',wrenchSvg='<svg><use href="#i-wrench"/></svg>';
+function carLogo(c){const b=brandIcon(c.name);return `<span class="lg">${b||`<span class="ini">${esc((c.name||'?').trim().charAt(0))}</span>`}</span>`}
+function renderTL(){
+  if(layout!=='tl')return;
+  const car=curCar();if(!car){$('tl').innerHTML='';return}
+  const cur=curOdo(car.id);
+  $('tlChip').innerHTML=`${carLogo(car)}<span style="min-width:0"><b>${esc(car.name)}</b><small>${Number.isFinite(cur)?`آخر عداد <span class="n">${fmt(cur,0)}</span> كم`:'لسه مفيش قراءة عداد'}</small></span><svg><use href="#i-chev"/></svg>`;
+  const on=syncOn();
+  $('tlSync').innerHTML=`<svg><use href="#i-${on&&!syncErr?'cloud':'cloudoff'}"/></svg>`;
+  $('tlSync').setAttribute('aria-label',on?(syncErr||'متزامن'):'المزامنة مقفولة');$('tlSync').style.color=on&&syncErr?'#F7A49A':'';
+  // headline numbers: all-time consumption and cost per km, and what this month cost so far
+  const all=stats(car.id,()=>true).s,m=today().slice(0,7),inM=d=>d.slice(0,7)===m;
+  const mFuel=sum(fills.filter(f=>f.car===car.id&&inM(f.date)),f=>f.money),mSv=sum(services.filter(s=>s.car===car.id&&inM(s.date)),svTotal);
+  $('tlSum').innerHTML=`<div class="${all?band(all.l100,car)[0]:''}"><span>الاستهلاك</span><b class="n">${all?fmt(all.l100):'—'}</b> <small>ل/100</small></div>
+    <div><span>تكلفة الكيلو</span><b class="n">${all?fmt(all.epk,2):'—'}</b> <small>ج</small></div>
+    <div><span>${MONTHS[+m.slice(5)-1]}</span><b class="n">${fmt(mFuel+mSv,0)}</b> <small>ج</small></div>`;
+  // one road: fills (with their consumption) and services, grouped by month
+  const ch=chain(fillsOf(car.id));
+  const items=[...ch.map(r=>({k:'f',date:r.date,odo:r.odo,r})),...servicesOf(car.id).map(s=>({k:'s',date:s.date,odo:s.odo,s}))]
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.odo-a.odo);
+  const months=[];items.forEach(it=>{const mk=it.date.slice(0,7),g=months.at(-1);if(g&&g.m===mk)g.items.push(it);else months.push({m:mk,items:[it]})});
+  let h='';
+  // the next fill-up, from the usual gap between the last few fill-ups
+  if(ch.length>=3){const last=ch.slice(-6),n=last.length-1,dd=(new Date(last[n].date)-new Date(last[0].date))/DAY,km=last[n].odo-last[0].odo;
+    if(dd>0&&km>0){const nd=new Date(last[n].date+'T00:00');nd.setDate(nd.getDate()+Math.round(dd/n));
+      h+=`<div class="tlr"><div class="tli next"><span class="dot">${pumpSvg}</span><span class="r1"><b>التفويلة الجاية تقريبًا</b><span class="m" style="font-size:13px;color:${iso(nd)<today()?'var(--warn)':'var(--muted)'}">~ ${nice(iso(nd))}</span></span>
+        <span class="r2"><span>على عداد ~<span class="n">${fmt(last[n].odo+Math.round(km/n),0)}</span></span><span>بمتوسط <span class="n">${fmt(km/dd,0)}</span> كم/يوم</span></span></div></div>`}}
+  if(!items.length)h+='<p class="empty">دوس على + تحت عشان تسجّل أول تفويلة أو صيانة.</p>';
+  months.slice(0,tlMonths).forEach(g=>{
+    const fu=sum(g.items.filter(i=>i.k==='f'),i=>i.r.money),sv=sum(g.items.filter(i=>i.k==='s'),i=>svTotal(i.s));
+    h+=`<div class="mon"><b>${monthName(g.m)}</b><span>بنزين <span class="n">${fmt(fu,0)}</span> · صيانة <span class="n">${fmt(sv,0)}</span></span></div><div class="tlr">`;
+    g.items.forEach(i=>{
+      if(i.k==='f'){const r=i.r,tags=[];
+        tags.push(Number.isFinite(r.km)?`<span class="tag"><span class="n">${fmt(r.km,0)}</span> كم</span>`:'<span class="tag">أول قراءة</span>');
+        if(r.seg){const b=band(r.l100,car)[0];tags.push(`<span class="tag ${b}"><span class="n">${fmt(r.l100)}</span> ل/100 · ${RATE[b]}</span>`,`<span class="tag"><span class="n">${fmt(r.epk,2)}</span> ج/كم</span>`)}
+        h+=`<button class="tli" type="button" data-ef="${esc(r.id)}"><span class="dot f">${pumpSvg}</span>
+          <span class="r1"><b>تفويلة · <span class="n">${fmt(r.liters,1)}</span> لتر</b><span class="m">${money(r.money)} ج</span></span>
+          <span class="r2"><span>${niceY(r.date)} · عداد <span class="n">${fmt(r.odo,0)}</span></span><span>${r.full?'فُل تانك':'مش فُل تانك'}</span></span>
+          <span class="tags">${tags.join('')}</span></button>`}
+      else{const s=i.s;
+        h+=`<button class="tli" type="button" data-es="${esc(s.id)}"><span class="dot s">${wrenchSvg}</span>
+          <span class="r1"><b>${esc(s.name)}</b><span class="m">${money(svTotal(s))} ج</span></span>
+          <span class="r2"><span>${niceY(s.date)}${s.odo?` · عداد <span class="n">${fmt(s.odo,0)}</span>`:''}</span><span>${s.labor?`${s.parts?`قطع ${money(s.parts)} · `:''}مصنعية ${money(s.labor)}`:''}</span></span>
+          ${s.notes?`<span class="nt">${esc(s.notes)}</span>`:''}</button>`}});
+    h+='</div>'});
+  if(months.length>tlMonths)h+=`<button class="btn ghost wide small" type="button" id="tlMore">اعرض الأقدم</button>`;
+  $('tl').innerHTML=h;
+}
+$('tl').onclick=e=>{
+  const f=e.target.closest('[data-ef]');if(f){openFill(f.dataset.ef);return}
+  const s=e.target.closest('[data-es]');if(s){openSvc(s.dataset.es);return}
+  if(e.target.closest('#tlMore')){tlMonths+=6;renderTL()}
+};
+$('tnav').onclick=e=>{
+  if(e.target.closest('#tFab')){openS('addSheet');return}
+  const b=e.target.closest('[data-tab]');if(!b)return;
+  if(b.dataset.tab==='more'){openSettings();return}
+  tab=b.dataset.tab;ls('tab',tab);applyLayout();scrollTo(0,0);
+};
+$('addFill').onclick=()=>openFill(null);
+$('addSvc').onclick=()=>openSvc(null);
+$('tlSet').onclick=openSettings;
+$('tlSync').onclick=()=>{if(syncOn()){sync();toast(syncErr||'بيتزامن…')}else openSync()};
+$('tlChip').onclick=()=>{
+  $('cpList').innerHTML=cars.map(c=>`<button class="crow" type="button" data-pick="${esc(c.id)}"><span style="display:flex;align-items:center;gap:10px">${carLogo(c)}<b>${esc(c.name)}</b></span>${c.id===current?'<span style="color:var(--good);font-weight:700">✓</span>':''}</button>`).join('');
+  openS('carPick');
+};
+$('cpList').onclick=e=>{const b=e.target.closest('[data-pick]');if(!b)return;current=b.dataset.pick;ls('car',current);sel=openId=armed=null;tlMonths=6;closeS();render()};
+$('cpAdd').onclick=()=>openCar(null);
+applyLayout();
+$('laySeg').onclick=e=>{const b=e.target.closest('[data-lay]');if(!b)return;layout=b.dataset.lay;ls('layout',layout);applyLayout();render();renderSettings();scrollTo(0,0)};
+
 // ---- sheets ----
 function openS(id){document.querySelectorAll('.sheet.on').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');$(id).scrollTop=0;$('scrim').classList.add('on')}
 function closeS(){document.querySelectorAll('.sheet.on').forEach(s=>s.classList.remove('on'));$('scrim').classList.remove('on')}
@@ -804,6 +982,7 @@ function openFill(id){
   $('fDate').value=f?f.date:today();$('fOdo').value=f?f.odo:'';$('fPrice').value=f?f.price:car.price;$('fFull').checked=f?f.full:true;
   $('fAmt').value='';setMode(f?'money':mode);if(f)$('fAmt').value=f.money;
   const last=fillsOf(current).at(-1);$('fOdo').placeholder=last?String(last.odo+1):'';
+  $('fDel').hidden=!f;$('fDel').className='btn del';$('fDel').textContent='امسح التفويلة';
   $('err').hidden=true;openS('fillSheet');live();
   if(!f)setTimeout(()=>$('fOdo').focus(),250);
 }
@@ -818,6 +997,11 @@ function live(){
     <div><span class="l">من آخر تفويلة</span><span class="v"><span class="n">${km>0?fmt(km,0):'—'}</span> كم</span></div>
     <div><span class="l">لتر/100كم</span><span class="v n">${Number.isFinite(l100)?fmt(l100):v.full?'—':'مع الفُل'}</span></div>`;
 }
+$('fDel').onclick=()=>{
+  if(!editId)return;const b=$('fDel');
+  if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='متأكد؟ امسح';return}
+  del(editId);fills=fills.filter(f=>f.id!==editId);editId=null;openId=armed=null;save();closeS();render();toast('اتمسحت');
+};
 $('fMode').onclick=e=>{const b=e.target.closest('[data-m]');if(b){setMode(b.dataset.m);live()}};
 ['fOdo','fAmt','fPrice'].forEach(id=>$(id).addEventListener('input',live));
 $('fFull').addEventListener('change',live);
@@ -848,6 +1032,7 @@ function renderSettings(){
   $('carList').innerHTML=cars.map(c=>`<button class="crow" type="button" data-car="${esc(c.id)}"><span><b>${brandIcon(c.name)}${esc(c.name)}</b><span>سعر اللتر <span class="n">${fmt(c.price,2)}</span> · كويس تحت <span class="n">${fmt(c.good,1)}</span> · عالي من <span class="n">${fmt(c.bad,1)}</span></span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>`).join('');
   $('cmpSec').hidden=cars.length<2;renderSync();
   $('langSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===LANG));
+  $('laySeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lay===layout));
   const a=backupAge();
   $('bkNote').innerHTML=(a===null?'لسه ما خدتش نسخة احتياطية. ':`آخر نسخة: ${nice(iso(meta.lastBackup))} (${a?`من <span class="n">${a}</span> ${dayW(a)}`:'النهارده'}). `)+'بياناتك متخزنة على الموبايل ده بس، فاحفظ النسخة في Drive أو واتساب.';
 }
@@ -1340,6 +1525,11 @@ const EN={
   'شهور · آخر مرة على':'months · last at','شهر · آخر مرة على':'months · last at',
   'اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.':'Enter after how many km or months, or untick the reminder.',
   'اكتب كل كام كيلو أو كل كام شهر.':'Enter an interval in km or months.','اكتب تاريخ آخر مرة.':'Enter the date it was last done.',
+  'شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
+  'تفويلة':'Fill-up','اختار العربية':'Choose a car','امسح التفويلة':'Delete fill-up','الاستهلاك':'Consumption','ل/100':'L/100','آخر عداد':'Odometer','لسه مفيش قراءة عداد':'No odometer reading yet',
+  'التفويلة الجاية تقريبًا':'Next fill-up, roughly','على عداد ~':'at ~','بمتوسط':'averaging','كم/يوم':'km/day','بنزين':'Fuel','· صيانة':'· maintenance','عداد':'odometer','اعرض الأقدم':'Show older',
+  'تفويلة ·':'Fill-up ·','فُل تانك':'Full tank','ج/كم':'EGP/km',
+  'دوس على + تحت عشان تسجّل أول تفويلة أو صيانة.':'Tap + below to log your first fill-up or service.','متزامن':'Synced','المزامنة مقفولة':'Sync is off','بيتزامن…':'Syncing…',
   // welcome
   'أهلاً بيك في دفتر البنزين':'Welcome to Fuel Log','+ زوّد عربيتك':'+ Add your car','عندي نسخة احتياطية، رجّعها':'I have a backup, restore it','بياناتي على GitHub، اربطها':'My data is on GitHub, connect it',
   'ابدأ بإضافة عربيتك، وبعدها سجّل كل تفويلة والتطبيق هيحسبلك الاستهلاك وتكلفة الكيلو. بياناتك بتتخزن على موبايلك ده بس، ومحدش غيرك بيشوفها.':'Start by adding your car, then log every fill-up and the app works out your consumption and cost per km. Your data is stored on this phone only; nobody else can see it.'
@@ -1352,7 +1542,7 @@ const EN_RX=[
   [/^· (.+) — فاضل$/,'· $1 — in'],[/^· (.+) — متأخر$/,'· $1 — overdue by'],[/^كم من فُل تانك (.+)$/,'km since the full tank of $1'],
   [/^(اتسجّلت|اتعدّلت) · سعر اللتر بقى ([\d.,]+)$/,(m,a,p)=>`${T(a)} · price per liter is now ${p}`],[/^(اتسجّلت|اتعدّلت) · تذكير (.+) اتحدّث$/,(m,a,n)=>`${T(a)} · reminder "${n}" updated`],
   [/^اترجّع (\d+) تفويلة و(\d+) صيانة$/,'Restored $1 fill-ups and $2 services'],[/^هيتمسح معاها (\d+) تفويلة و(\d+) صيانة\. متأكد؟$/,'This also deletes $1 fill-ups and $2 services. Sure?'],
-  [/^الإجمالي على (.+):$/,'Total on $1:'],[/^(اتسجّلت|اتعدّلت) · اتعمل تذكير$/,(m,a)=>`${T(a)} · reminder created`],
+  [/^الإجمالي على (.+):$/,'Total on $1:'],[/^(.+) · عداد$/,'$1 · odometer'],[/^ل\/100 · (كويس|متوسط|عالي)$/,(m,r)=>`L/100 · ${T(r)}`],[/^(اتسجّلت|اتعدّلت) · اتعمل تذكير$/,(m,a)=>`${T(a)} · reminder created`],
   [/^(كم|شهر|شهور) · آخر مرة (.+)$/,(m,u,d)=>`${T(u)} · last ${d}`],[/^التعديلات لسه ما اترفعتش على GitHub: (.+)\.$/,(m,e)=>`Changes not uploaded to GitHub yet: ${T(e)}.`],
   [/^آخر نسخة: (.+) \(من$/,'Last backup: $1 ('],[/^(?:يوم|أيام)\)\. بياناتك .+$/,'days ago). '+BK],[/^آخر نسخة: (.+) \(النهارده\)\. بياناتك .+$/,'Last backup: $1 (today). '+BK],
   [/^(.+)\.$/,(m,e)=>EN[e]?EN[e]+'.':m]   // an error message with a full stop added

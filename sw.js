@@ -1,5 +1,5 @@
 // Petrol offline cache. Bump VERSION when files change.
-const VERSION = 'petrol-v10';
+const VERSION = 'petrol-v11';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'brand-chevrolet.svg'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
