@@ -802,7 +802,7 @@ function renderAlerts(){
   cars.forEach(c=>{const cur=curOdo(c.id);c.maint.forEach(m=>{const s=mtState(m,cur);if(s.st!=='good')due.push({c,m,s,st:s.st})})});
   due.sort((a,b)=>(a.st==='bad'?0:1)-(b.st==='bad'?0:1));
   // the reminders tab badge counts what's due on the car on screen
-  const nCur=due.filter(d=>d.c.id===current).length,rb=$('tnav').querySelector('[data-tab=rem] span');
+  const nCur=due.filter(d=>d.c.id===current).length,rb=$('tnav').querySelector('button[data-tab=rem] > span');
   rb.dataset.n=nCur||'';rb.classList.toggle('badge',nCur>0);
   // one banner per reminder; ✕ hides that one for a week, or until it goes from "coming up" to "due"
   let hide={};try{hide=JSON.parse(localStorage.getItem('mtHide'))||{}}catch(_){}
@@ -856,7 +856,9 @@ function renderMaint(){
   // reminders
   $('mtWrap').hidden=!car.maint.length;
   $('mtodo').innerHTML=Number.isFinite(cur)?`آخر عداد <span class="n">${fmt(cur,0)}</span>`:'';
-  const items=car.maint.map(m=>({m,s:mtState(m,cur)})).sort((a,b)=>b.s.used-a.s.used);
+  // due first, then coming up, then the rest; the most overdue at the very top
+  const rank={bad:0,warn:1,good:2},over=(m,s)=>Math.max(m.every>0&&Number.isFinite(s.km)?-s.km/m.every:-Infinity,m.months>0&&Number.isFinite(s.dd)?-s.dd/(m.months*30.44):-Infinity);
+  const items=car.maint.map(m=>({m,s:mtState(m,cur)})).sort((a,b)=>rank[a.s.st]-rank[b.s.st]||over(b.m,b.s)-over(a.m,a.s)||b.s.used-a.s.used);
   $('mts').innerHTML=items.map(({m,s})=>{const {used,st}=s;return `<div class="mt ${st}">
     <button class="mtb" type="button" data-mt="${esc(m.id)}"><span class="nm">${esc(m.name)}</span><span class="sub">${mtEveryHTML(m)} · ${m.every>0&&m.last>0?`آخر مرة على <span class="n">${fmt(m.last,0)}</span>`:`آخر مرة ${niceY(m.lastDate||today())}`}</span>
       <span class="rem">${mtRemHTML(s)}</span></button>
