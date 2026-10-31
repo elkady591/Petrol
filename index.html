@@ -699,7 +699,7 @@ function inPeriod(date){
 const monthName=m=>MONTHS[+m.slice(5)-1]+' '+m.slice(0,4);
 const periodLabel=()=>period==='all'?'كل الفترة':period==='30'?'آخر 30 يوم':monthName(period);
 function periodOptions(){
-  const ms=[...new Set(fillsOf(current).map(f=>f.date.slice(0,7)))].sort().reverse();
+  const ms=[...new Set([...fillsOf(current),...servicesOf(current)].map(x=>x.date.slice(0,7)))].sort().reverse();
   return [['all','كل الفترة'],...ms.map(m=>[m,monthName(m)])];
 }
 
@@ -1366,13 +1366,23 @@ const SEED_SV={
     ['2022-05-12',142000,'فلتر تكييف',140,0],['2022-05-12',142000,'زيت وفلتر',860,0],
     ['2022-02-05',132000,'زيت وفلتر',850,0],
     ['2022-01-12',131000,'موبينة',1050,100],
-    ['2021-10-02',122000,'زيت فتيس',750,50],['2021-10-02',122000,'بوجيهات',750,50],['2021-10-02',122000,'فلتر هوا',250,50],['2021-10-02',122000,'زيت وفلتر',900,50]]}};
+    ['2021-10-02',122000,'زيت فتيس',750,50],['2021-10-02',122000,'بوجيهات',750,50],['2021-10-02',122000,'فلتر هوا',250,50],['2021-10-02',122000,'زيت وفلتر',900,50]]},
+  // Aveo items from the user's expense app, minus what was already logged; odometer 0 = not recorded
+  'expenses-aveo':{car:/aveo/i,rows:[
+    ['2026-05-25',0,'فرش الصالون',2400,0],['2026-05-25',0,'مصنعية الكهربائي',0,700],
+    ['2026-06-01',38600,'كاوتش حماية علبة الدركسيون',150,0],['2026-06-01',38600,'شحن التكييف',1000,0],['2026-06-01',38600,'ظبط زوايا',150,0],['2026-06-01',38600,'فرق مصنعية العفشجي',0,150],
+    ['2026-06-06',0,'ذراع نور',350,0],['2026-06-06',0,'فلتر تكييف',100,0],['2026-06-06',0,'ضفيرة كهرباء لوحدة الزجاج الرباعي',450,0],
+    ['2026-06-06',0,'2 ماكينة زجاج خلفي',2000,0],['2026-06-06',0,'وحدة رفع زجاج',1000,0],['2026-06-06',0,'كالون كهرباء للشنطة',500,0],
+    ['2026-06-07',0,'قنصلة الفتيس',1700,0],
+    ['2026-06-08',0,'أسلاك لضفيرة الكهرباء (الشابورة) + ذراع النور + السنتر + وحدة الرفع + قفل الشنطة',1300,0],['2026-06-08',0,'مصنعية الكهربائي',0,700],['2026-06-08',0,'مصنعية الشكمانجي',0,100],
+    ['2026-06-14',0,'ضفيرة المالتي للطارة',600,0],['2026-06-14',0,'طاسات',300,0],['2026-06-14',0,'مصنعية الكهربائي',0,200],
+    ['2026-06-28',0,'شاحن عربية',600,0]]}};
 function runSeeds(){
   Object.entries(SEED_SV).forEach(([k,{car,rows}])=>{
     if(meta.seeded.includes(k))return;
     const c=cars.find(c=>car.test(c.id)||car.test(c.name));if(!c)return;
     rows.forEach(([date,odo,name,parts,labor],i)=>{const id=k+'-'+i;if(!services.some(s=>s.id===id))services.push({id,car:c.id,date,odo,name,parts,labor,notes:''})});
-    meta.seeded.push(k)});
+    meta.seeded.push(k);if(meta.sync)meta.sync.dirty=true});   // new history reaches the repo on the next sync
 }
 const del=id=>{(meta.dels=meta.dels||{})[id]=Date.now()};   // tombstone, so a deletion reaches the other phones
 function store(){try{localStorage.setItem(KEY,JSON.stringify({v:2,cars,fills,services,seeded:meta.seeded||[],dels:meta.dels||{},lastBackup:meta.lastBackup||null,snooze:meta.snooze||null,sync:meta.sync||null}));return true}catch(_){toast('مساحة التخزين مش متاحة');return false}}
