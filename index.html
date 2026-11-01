@@ -176,6 +176,8 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .tic[aria-pressed=true]{color:var(--accent)}
 .tic[aria-pressed=true] svg{fill:currentColor}
 .tic.sure{background:var(--bad);color:#fff}
+#tdView{margin-bottom:12px}
+.tdjust{margin-bottom:12px}
 /* ===== timeline layout (body.lay-tl, picked in settings); body[data-tab] says which tab shows ===== */
 .tlhead,.tnav,#tl{display:none}
 .lay-tl .mast .top,.lay-tl #cars,.lay-tl #mline,.lay-tl .dock,.lay-tl [data-t=classic]{display:none!important}
@@ -467,6 +469,7 @@ html{padding-top:0}
     <h2 id="tdh">المهام <small id="tdCount"></small></h2>
     <div class="seg mini" id="tdCars" data-user></div>
     <form class="tdadd" id="tdForm"><input type="text" id="tdNew" maxlength="120" autocomplete="off" placeholder="عاوز تعمل إيه؟" aria-label="مهمة جديدة"><button class="btn pri small" type="submit">زوّد</button></form>
+    <div class="seg mini" id="tdView" style="--cols:2"><button type="button" data-v="list">القايمة</button><button type="button" data-v="place">حسب الورشة</button></div>
     <div id="tdList"></div>
   </section>
 </main>
@@ -640,8 +643,11 @@ html{padding-top:0}
   <h3 id="tsh">تعديل المهمة <span id="tshcar" data-user></span></h3>
   <form class="form" id="tdEditForm" novalidate>
     <label class="full">المهمة<input type="text" id="tdName" maxlength="120" autocomplete="off"></label>
+    <label class="full">الورشة أو المكان<input type="text" id="tdPlace" list="tdPlaces" maxlength="40" autocomplete="off" placeholder="اختياري"></label>
+    <datalist id="tdPlaces"></datalist>
     <label class="chk full" id="tdNextL"><input type="checkbox" id="tdNext">في الزيارة الجاية</label>
     <button class="btn pri" type="submit">حفظ</button>
+    <button class="btn ghost" type="button" id="tdLog">سجّلها كصيانة</button>
     <button class="btn del" type="button" id="tdDel">امسح المهمة</button>
   </form>
 </div>
@@ -944,13 +950,14 @@ function renderFills(rows,car){
 }
 
 // ---- to-do list, one per car: what's picked for the next visit on top, in order, then the rest, then what's done ----
-let tdEdit=null,tdArmed=false,tdDoneOpen=false,tdDelArm=null;
+let tdEdit=null,tdArmed=false,tdDoneOpen=false,tdDelArm=null,tdJust=null,tdView='list';
+try{if(localStorage.getItem('tdView')==='place')tdView='place'}catch(_){}
 const todosOf=id=>todos.filter(t=>t.car===id);
 const tdNewOrd=()=>Math.max(0,...todos.map(t=>t.ord))+1,tdTopOrd=()=>Math.min(1,...todos.map(t=>t.ord))-1;   // what's typed in goes on top of the list
 function tdRow(t,up){
   const star=`<button class="tic" type="button" data-tdpin="${esc(t.id)}" aria-pressed="${t.next}" aria-label="في الزيارة الجاية"><svg fill="none"><use href="#i-star"/></svg></button>`;
   return `<div class="td ${t.done?'done':''}"><button class="tck" type="button" data-tdck="${esc(t.id)}" aria-pressed="${t.done}" aria-label="خلصت"><svg><use href="#i-tick"/></svg></button>
-    <button class="tnm" type="button" data-tded="${esc(t.id)}"><span data-user>${esc(t.name)}</span>${t.done&&t.doneDate?`<small>${niceY(t.doneDate)}</small>`:''}</button>
+    <button class="tnm" type="button" data-tded="${esc(t.id)}"><span data-user>${esc(t.name)}</span>${t.place&&tdView!=='place'?`<small data-user>📍 ${esc(t.place)}</small>`:''}${t.done&&t.doneDate?`<small>${niceY(t.doneDate)}</small>`:''}</button>
     ${up?`<button class="tic" type="button" data-tdup="${esc(t.id)}" aria-label="قدّمها"><svg><use href="#i-up"/></svg></button>`:''}${t.done?'':star}<button class="tic ${tdDelArm===t.id?'sure':''}" type="button" data-tddel="${esc(t.id)}" aria-label="${tdDelArm===t.id?'متأكد؟ امسح':'امسح'}"><svg><use href="#i-trash"/></svg></button></div>`;
 }
 function renderTodos(){
@@ -960,10 +967,17 @@ function renderTodos(){
   $('tdCars').innerHTML=cars.map(c=>{const n=nextOf(c.id).length;return `<button type="button" data-tdcar="${esc(c.id)}" aria-pressed="${c.id===current}">${esc(c.name)}${n?` · <span class="n">${n}</span>`:''}</button>`}).join('');
   const mine=todosOf(car.id).sort((a,b)=>a.ord-b.ord),next=mine.filter(t=>t.next&&!t.done),rest=mine.filter(t=>!t.next&&!t.done),done=mine.filter(t=>t.done).sort((a,b)=>b.doneDate.localeCompare(a.doneDate)||b.ord-a.ord);
   $('tdCount').innerHTML=mine.length?`<span>باقي</span> <span class="n">${next.length+rest.length}</span> · <span>خلص</span> <span class="n">${done.length}</span>`:'';
-  let h='';
+  $('tdView').querySelectorAll('[data-v]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===tdView));
+  const jt=todos.find(t=>t.id===tdJust&&t.car===car.id&&t.done);
+  let h=jt?`<div class="banner tdjust"><span><span>خلصت</span> <b data-user>${esc(jt.name)}</b></span><span class="bact"><button class="btn pri small" type="button" data-tdlog="${esc(jt.id)}">سجّلها كصيانة</button><button class="btn ghost small" type="button" data-tdjx aria-label="اخفي">✕</button></span></div>`:'';
+  if(tdView==='place'&&next.length+rest.length){
+    const by=new Map();[...next,...rest].forEach(t=>{const p=(t.place||'').trim();by.has(p)||by.set(p,[]);by.get(p).push(t)});
+    [...by.entries()].sort((a,b)=>(!a[0])-(!b[0])||b[1].length-a[1].length).forEach(([p,l])=>{
+      h+=`<div class="tdg"><h4 class="sub-h">${p?`<span data-user>📍 ${esc(p)}</span>`:'<span>من غير ورشة</span>'} <small><span class="n">${l.length}</span></small></h4>${l.map(t=>tdRow(t)).join('')}</div>`})}
+  else{
   if(next.length)h+=`<div class="tdg next"><h4 class="sub-h">الزيارة الجاية <small><span class="n">${next.length}</span></small></h4>${next.map((t,i)=>tdRow(t,i>0)).join('')}</div>`;
   else if(rest.length)h+='<p class="hint" style="margin:0 0 12px">دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.</p>';
-  if(rest.length)h+=`<div class="tdg"><h4 class="sub-h">عاوز أعملها <small><span class="n">${rest.length}</span></small></h4>${rest.map(t=>tdRow(t)).join('')}</div>`;
+  if(rest.length)h+=`<div class="tdg"><h4 class="sub-h">عاوز أعملها <small><span class="n">${rest.length}</span></small></h4>${rest.map(t=>tdRow(t)).join('')}</div>`}
   if(done.length){h+=`<button class="btn ghost wide small" type="button" id="tdDoneBtn">${tdDoneOpen?'اخفي اللي خلص':`اللي خلص (<span class="n">${done.length}</span>)`}</button>`;
     if(tdDoneOpen)h+=`<div class="tdg" style="margin:10px 0 0">${done.map(t=>tdRow(t)).join('')}</div>`}
   if(!mine.length)h='<p class="empty">اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.</p>';
@@ -972,9 +986,13 @@ function renderTodos(){
   tb.dataset.n=next.length||'';tb.classList.toggle('badge',next.length>0);
 }
 const tdTouch=t=>{t.u=Date.now();save();render()};
+// a finished task opens the service form ready to take the amounts; the workshop lands in the notes, and a reminder stays the user's own choice
+function tdToService(t){const cur=curOdo(t.car);openSvc(null,{name:t.name,odo:Number.isFinite(cur)?cur:'',date:t.doneDate||today(),notes:t.place?'عند '+t.place:''});$('sRem').checked=false;$('sRem').dispatchEvent(new Event('change'))}
+$('tdLog').onclick=()=>{const t=todos.find(x=>x.id===tdEdit);if(t)tdToService(t)};
+$('tdView').onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;tdView=b.dataset.v;ls('tdView',tdView);renderTodos()};
 $('tdCars').onclick=e=>{const b=e.target.closest('[data-tdcar]');if(!b)return;current=b.dataset.tdcar;sel=openId=armed=null;svAll=false;ls('car',current);render()};
 $('tdForm').onsubmit=e=>{e.preventDefault();const name=$('tdNew').value.trim();if(!name)return;
-  todos.push({id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),car:current,name,done:false,doneDate:'',next:false,ord:tdTopOrd(),u:Date.now()});
+  todos.push({id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),car:current,name,place:'',done:false,doneDate:'',next:false,ord:tdTopOrd(),u:Date.now()});
   $('tdNew').value='';save();render();$('tdNew').focus()};
 $('tdList').onclick=e=>{
   const hit=k=>{const b=e.target.closest(`[data-${k}]`);return b?todos.find(t=>t.id===b.dataset[k]):null};
@@ -982,18 +1000,20 @@ $('tdList').onclick=e=>{
   let t=hit('tddel');
   if(t){if(tdDelArm===t.id){tdDelArm=null;del(t.id);todos=todos.filter(x=>x.id!==t.id);save();render();toast('اتمسحت')}
     else{const id=tdDelArm=t.id;renderTodos();setTimeout(()=>{if(tdDelArm===id){tdDelArm=null;renderTodos()}},4000)}return}
+  const lg=hit('tdlog');if(lg){tdJust=null;renderTodos();tdToService(lg);return}
+  if(e.target.closest('[data-tdjx]')){tdJust=null;renderTodos();return}
   if(tdDelArm){tdDelArm=null;renderTodos()}
   if(e.target.closest('#tdDoneBtn')){tdDoneOpen=!tdDoneOpen;renderTodos();return}
   t=hit('tdck');
-  if(t){t.done=!t.done;t.doneDate=t.done?today():'';t.next=false;tdTouch(t);return}
+  if(t){t.done=!t.done;t.doneDate=t.done?today():'';t.next=false;tdJust=t.done?t.id:null;tdTouch(t);return}
   if((t=hit('tdpin'))){t.next=!t.next;t.ord=tdNewOrd();tdTouch(t);return}
   if((t=hit('tdup'))){const l=todosOf(current).filter(x=>x.next&&!x.done).sort((a,b)=>a.ord-b.ord),o=l[l.indexOf(t)-1];
     if(o){[t.ord,o.ord]=[o.ord,t.ord];o.u=Date.now();tdTouch(t)}return}
-  if((t=hit('tded'))){tdEdit=t.id;tdArmed=false;$('tdName').value=t.name;$('tdNext').checked=t.next;$('tdNextL').style.display=t.done?'none':'';$('tshcar').textContent=(curCar()||{}).name||'';
+  if((t=hit('tded'))){tdEdit=t.id;tdArmed=false;$('tdName').value=t.name;$('tdNext').checked=t.next;$('tdNextL').style.display=t.done?'none':'';$('tdPlace').value=t.place||'';$('tdPlaces').innerHTML=[...new Set(todos.map(x=>x.place).filter(Boolean))].map(p=>`<option value="${esc(p)}">`).join('');$('tdLog').hidden=!t.done;$('tshcar').textContent=(curCar()||{}).name||'';
     $('tdDel').classList.remove('sure');$('tdDel').textContent='امسح المهمة';openS('tdSheet')}
 };
 $('tdEditForm').onsubmit=e=>{e.preventDefault();const t=todos.find(x=>x.id===tdEdit),name=$('tdName').value.trim();if(!t||!name)return;
-  const nx=$('tdNext').checked&&!t.done;if(nx&&!t.next)t.ord=tdNewOrd();t.name=name;t.next=nx;closeS();tdTouch(t)};
+  const nx=$('tdNext').checked&&!t.done;if(nx&&!t.next)t.ord=tdNewOrd();t.name=name;t.next=nx;t.place=$('tdPlace').value.trim();closeS();tdTouch(t)};
 $('tdDel').onclick=()=>{
   if(!tdArmed){tdArmed=true;$('tdDel').classList.add('sure');$('tdDel').textContent='متأكد؟ امسح';return}
   del(tdEdit);todos=todos.filter(t=>t.id!==tdEdit);tdEdit=null;closeS();save();render();toast('اتمسحت')};
@@ -1279,7 +1299,7 @@ function openSvc(id,pre,fromRef=false){
   const p=s||pre||{};svEdit=s?s.id:null;svCar=car.id;svFromRef=fromRef;armedSvDel=null;
   $('sshT').textContent=s?'تعديل صيانة':'سجّل صيانة';$('sshcar').textContent=car.name;
   $('sDate').value=p.date||today();$('sOdo').value=p.odo||'';$('sName').value=p.name||'';
-  $('sParts').value=s&&s.parts?s.parts:'';$('sLabor').value=s&&s.labor?s.labor:'';$('sNotes').value=s?s.notes:'';
+  $('sParts').value=s&&s.parts?s.parts:'';$('sLabor').value=s&&s.labor?s.labor:'';$('sNotes').value=s?s.notes:(p.notes||'');
   const cur=curOdo(car.id);$('sOdo').placeholder=Number.isFinite(cur)?String(cur):'';
   $('sErr').hidden=true;$('sSaveMore').hidden=!!s;$('sDel').hidden=!s;$('sDel').className='btn del';$('sDel').textContent='امسح';
   remTouched=false;svGuide();fillSug();svLive();openS('svSheet');
@@ -1435,7 +1455,7 @@ function normalize(d){
   const sv=(Array.isArray(d.services)?d.services:[]).map(s=>{const c=cs.find(c=>c.id===s.car);if(!c)return null;
     return {id:String(s.id),car:c.id,date:String(s.date),odo:Number(s.odo)||0,name:String(s.name||''),parts:Number(s.parts)||0,labor:Number(s.labor)||0,notes:String(s.notes||''),u:Number(s.u)||0}}).filter(Boolean);
   const td=(Array.isArray(d.todos)?d.todos:[]).map(t=>{const c=cs.find(c=>c.id===t.car);if(!c)return null;
-    return {id:String(t.id),car:c.id,name:String(t.name||''),done:!!t.done,doneDate:t.doneDate?String(t.doneDate):'',next:!!t.next&&!t.done,ord:Number(t.ord)||0,u:Number(t.u)||0}}).filter(Boolean);
+    return {id:String(t.id),car:c.id,name:String(t.name||''),place:String(t.place||''),done:!!t.done,doneDate:t.doneDate?String(t.doneDate):'',next:!!t.next&&!t.done,ord:Number(t.ord)||0,u:Number(t.u)||0}}).filter(Boolean);
   return {cars:cs.sort((a,b)=>a.order-b.order),fills:fs,services:sv,todos:td};
 }
 // Maintenance history brought over from the Car Notes app; added once per car.
@@ -1679,7 +1699,7 @@ const EN={
   'شهور · آخر مرة على':'months · last at','شهر · آخر مرة على':'months · last at',
   'اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.':'Enter after how many km or months, or untick the reminder.',
   'اكتب كل كام كيلو أو كل كام شهر.':'Enter an interval in km or months.','اكتب تاريخ آخر مرة.':'Enter the date it was last done.',
-  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','متأكد؟ امسح':'Sure? Delete','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
+  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','القايمة':'List','حسب الورشة':'By workshop','الورشة أو المكان':'Workshop or place','من غير ورشة':'No workshop','سجّلها كصيانة':'Log as service','اختياري':'Optional','متأكد؟ امسح':'Sure? Delete','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
   'تفويلة':'Fill-up','اختار العربية':'Choose a car','امسح التفويلة':'Delete fill-up','الاستهلاك':'Consumption','ل/100':'L/100','آخر عداد':'Odometer','لسه مفيش قراءة عداد':'No odometer reading yet',
   'التفويلة الجاية تقريبًا':'Next fill-up, roughly','على عداد ~':'at ~','بمتوسط':'averaging','كم/يوم':'km/day','بنزين':'Fuel','· صيانة':'· maintenance','عداد':'odometer','اعرض الأقدم':'Show older',
 'اخفي':'Hide','اتخفى، والميعاد لسه في التذكيرات':'Hidden — it is still in Reminders',
