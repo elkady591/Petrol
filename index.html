@@ -156,12 +156,31 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .brand{vertical-align:middle;margin-inline-end:7px;flex:none;position:relative;top:-1px}
 .brand.opel{width:28px;height:18px}
 .brand.chevy{width:34px;height:13px}
+/* to-do list, one per car */
+#tdCars{margin-bottom:10px}
+.tdadd{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:12px}
+.tdadd input{min-width:0}
+.tdg{margin-bottom:14px}
+.tdg.next{background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:14px;padding:10px 10px 4px;margin-inline:-4px}
+.td{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+.sub-h+.td{border-top:0}
+.tck{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--muted);background:transparent;padding:0;display:grid;place-items:center;color:#fff}
+.tck svg{width:16px;height:16px;opacity:0}
+.tck[aria-pressed=true]{background:var(--good);border-color:var(--good)}
+.tck[aria-pressed=true] svg{opacity:1}
+.tnm{flex:1;min-width:0;border:0;background:transparent;padding:2px 0;text-align:start;color:var(--ink);font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+.tnm small{display:block;font-size:12px;color:var(--muted)}
+.td.done .tnm span{color:var(--muted);text-decoration:line-through}
+.tic{flex:none;width:34px;height:34px;border:0;border-radius:10px;background:transparent;color:var(--muted);padding:0;display:grid;place-items:center}
+.tic svg{width:20px;height:20px}
+.tic[aria-pressed=true]{color:var(--accent)}
+.tic[aria-pressed=true] svg{fill:currentColor}
 /* ===== timeline layout (body.lay-tl, picked in settings); body[data-tab] says which tab shows ===== */
 .tlhead,.tnav,#tl{display:none}
 .lay-tl .mast .top,.lay-tl #cars,.lay-tl #mline,.lay-tl .dock,.lay-tl [data-t=classic]{display:none!important}
 .lay-tl .tlhead{display:grid;gap:14px}
 .lay-tl #tl{display:block}
-.lay-tl:not([data-tab=hist]) [data-t=hist],.lay-tl:not([data-tab=rep]) [data-t=rep],.lay-tl:not([data-tab=rem]) [data-t=rem]{display:none!important}
+.lay-tl:not([data-tab=hist]) [data-t=hist],.lay-tl:not([data-tab=rep]) [data-t=rep],.lay-tl:not([data-tab=rem]) [data-t=rem],.lay-tl:not([data-tab=todo]) [data-t=todo]{display:none!important}
 .lay-tl[data-tab=rem] #svWrap,.lay-tl[data-tab=rem] #svAdd{display:none!important}
 .lay-tl[data-tab=rem] .twobtn{grid-template-columns:1fr}
 .hrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -442,6 +461,13 @@ html{padding-top:0}
     <p class="empty" id="mtEmpty" hidden style="padding:6px 4px 12px">سجّل الصيانات اللي بتعملها (المبلغ والمصنعية والملحوظات)، وكمان تقدر تعمل تذكير بمواعيدها على حسب العداد.</p>
     <div class="twobtn"><button class="btn pri small" type="button" id="svAdd">+ سجّل صيانة</button><button class="btn ghost small" type="button" id="mtAdd">+ تذكير</button></div>
   </section>
+
+  <section class="card" id="tdCard" aria-labelledby="tdh" data-t="todo">
+    <h2 id="tdh">المهام <small id="tdCount"></small></h2>
+    <div class="seg mini" id="tdCars" data-user></div>
+    <form class="tdadd" id="tdForm"><input type="text" id="tdNew" maxlength="120" autocomplete="off" placeholder="عاوز تعمل إيه؟" aria-label="مهمة جديدة"><button class="btn pri small" type="submit">زوّد</button></form>
+    <div id="tdList"></div>
+  </section>
 </main>
 
 <div class="dock"><button class="fab" id="fab" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>تفويلة جديدة</button></div>
@@ -452,7 +478,7 @@ html{padding-top:0}
   <button type="button" data-tab="rep"><span><svg><use href="#i-chart"/></svg></span>التقارير</button>
   <button type="button" class="tfab" id="tFab" aria-label="إضافة"><svg><use href="#i-plus"/></svg></button>
   <button type="button" data-tab="rem"><span><svg><use href="#i-bell"/></svg></span>التذكيرات</button>
-  <button type="button" data-tab="more"><span><svg><use href="#i-more"/></svg></span>المزيد</button>
+  <button type="button" data-tab="todo"><span><svg><use href="#i-todo"/></svg></span>المهام</button>
 </nav>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-pump" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M3 21h13M7 7h5v4H7z"/><path d="M15 10h2a2 2 0 0 1 2 2v4a1.5 1.5 0 0 0 3 0V9l-3-3"/></symbol>
@@ -460,7 +486,10 @@ html{padding-top:0}
   <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
   <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-5 3 3 5-7"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></symbol>
-  <symbol id="i-more" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></symbol>
+  <symbol id="i-todo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="i-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.500l2.600 5.500 6 .8-4.400 4.200 1.100 6-5.300-2.900-5.300 2.900 1.100-6-4.400-4.200 6-.8z"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H8a5 5 0 1 1 1.1-9.9A6 6 0 0 1 20 11a4 4 0 0 1-2.5 8z"/><path d="m9 14 2 2 4-4"/></symbol>
   <symbol id="i-cloudoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H8a5 5 0 1 1 1.1-9.9A6 6 0 0 1 20 11a4 4 0 0 1-2.5 8z"/><path d="M3 3l18 18"/></symbol>
@@ -604,6 +633,17 @@ html{padding-top:0}
   <div id="refBody"></div>
 </div>
 
+<div class="sheet" id="tdSheet" role="dialog" aria-modal="true" aria-labelledby="tsh">
+  <div class="grab"></div>
+  <h3 id="tsh">تعديل المهمة <span id="tshcar" data-user></span></h3>
+  <form class="form" id="tdEditForm" novalidate>
+    <label class="full">المهمة<input type="text" id="tdName" maxlength="120" autocomplete="off"></label>
+    <label class="chk full" id="tdNextL"><input type="checkbox" id="tdNext">في الزيارة الجاية</label>
+    <button class="btn pri" type="submit">حفظ</button>
+    <button class="btn del" type="button" id="tdDel">امسح المهمة</button>
+  </form>
+</div>
+
 <div class="sheet" id="svSheet" role="dialog" aria-modal="true" aria-labelledby="ssh">
   <div class="grab"></div>
   <h3 id="ssh"><b id="sshT" style="font-weight:600">صيانة</b> <span id="sshcar"></span></h3>
@@ -669,7 +709,7 @@ const RATE={good:'كويس',warn:'متوسط',bad:'عالي'};
 const ls=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}};
 const dayW=n=>n>=3&&n<=10?'أيام':'يوم';
 
-let cars=[],fills=[],services=[],meta={},current=null,period='all',sel=null,openId=null,armed=null,armedCar=null,armedMtDel=null,armedSvDel=null,editId=null,carEdit=null,mtEdit=null,svEdit=null,svAll=false,mode='money';
+let cars=[],fills=[],services=[],todos=[],meta={},current=null,period='all',sel=null,openId=null,armed=null,armedCar=null,armedMtDel=null,armedSvDel=null,editId=null,carEdit=null,mtEdit=null,svEdit=null,svAll=false,mode='money';
 try{period=localStorage.getItem('period')||'all';if(localStorage.getItem('mode')==='liters')mode='liters'}catch(_){}
 $('today').textContent=(()=>{const d=new Date();return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`})();
 
@@ -793,7 +833,7 @@ function render(){
       <div><span class="l">لترات</span><span class="v n">${fmt(r.seg.L,2)}</span></div>
       <div><span class="l">كم/لتر</span><span class="v n">${fmt(r.kml)}</span></div>`}else $('detail').hidden=true;}
 
-  renderMonths();renderMaint();renderFills(rows,car);renderTL();
+  renderMonths();renderMaint();renderTodos();renderFills(rows,car);renderTL();
   live();
 }
 
@@ -901,9 +941,59 @@ function renderFills(rows,car){
     </div>`}).join('');
 }
 
+// ---- to-do list, one per car: what's picked for the next visit on top, in order, then the rest, then what's done ----
+let tdEdit=null,tdArmed=false,tdDoneOpen=false;
+const todosOf=id=>todos.filter(t=>t.car===id);
+const tdNewOrd=()=>Math.max(0,...todos.map(t=>t.ord))+1;
+function tdRow(t,up){
+  const star=`<button class="tic" type="button" data-tdpin="${esc(t.id)}" aria-pressed="${t.next}" aria-label="في الزيارة الجاية"><svg fill="none"><use href="#i-star"/></svg></button>`;
+  return `<div class="td ${t.done?'done':''}"><button class="tck" type="button" data-tdck="${esc(t.id)}" aria-pressed="${t.done}" aria-label="خلصت"><svg><use href="#i-tick"/></svg></button>
+    <button class="tnm" type="button" data-tded="${esc(t.id)}"><span data-user>${esc(t.name)}</span>${t.done&&t.doneDate?`<small>${niceY(t.doneDate)}</small>`:''}</button>
+    ${up?`<button class="tic" type="button" data-tdup="${esc(t.id)}" aria-label="قدّمها"><svg><use href="#i-up"/></svg></button>`:''}${t.done?'':star}</div>`;
+}
+function renderTodos(){
+  const car=curCar();$('tdCard').hidden=!car;if(!car)return;
+  const nextOf=id=>todosOf(id).filter(t=>t.next&&!t.done);
+  $('tdCars').style.display=cars.length<2?'none':'';$('tdCars').style.setProperty('--cols',cars.length);
+  $('tdCars').innerHTML=cars.map(c=>{const n=nextOf(c.id).length;return `<button type="button" data-tdcar="${esc(c.id)}" aria-pressed="${c.id===current}">${esc(c.name)}${n?` · <span class="n">${n}</span>`:''}</button>`}).join('');
+  const mine=todosOf(car.id).sort((a,b)=>a.ord-b.ord),next=mine.filter(t=>t.next&&!t.done),rest=mine.filter(t=>!t.next&&!t.done),done=mine.filter(t=>t.done).sort((a,b)=>b.doneDate.localeCompare(a.doneDate)||b.ord-a.ord);
+  $('tdCount').innerHTML=mine.length?`<span>باقي</span> <span class="n">${next.length+rest.length}</span> · <span>خلص</span> <span class="n">${done.length}</span>`:'';
+  let h='';
+  if(next.length)h+=`<div class="tdg next"><h4 class="sub-h">الزيارة الجاية <small><span class="n">${next.length}</span></small></h4>${next.map((t,i)=>tdRow(t,i>0)).join('')}</div>`;
+  else if(rest.length)h+='<p class="hint" style="margin:0 0 12px">دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.</p>';
+  if(rest.length)h+=`<div class="tdg"><h4 class="sub-h">عاوز أعملها <small><span class="n">${rest.length}</span></small></h4>${rest.map(t=>tdRow(t)).join('')}</div>`;
+  if(done.length){h+=`<button class="btn ghost wide small" type="button" id="tdDoneBtn">${tdDoneOpen?'اخفي اللي خلص':`اللي خلص (<span class="n">${done.length}</span>)`}</button>`;
+    if(tdDoneOpen)h+=`<div class="tdg" style="margin:10px 0 0">${done.map(t=>tdRow(t)).join('')}</div>`}
+  if(!mine.length)h='<p class="empty">اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.</p>';
+  $('tdList').innerHTML=h;
+  const tb=$('tnav').querySelector('button[data-tab=todo] > span');
+  tb.dataset.n=next.length||'';tb.classList.toggle('badge',next.length>0);
+}
+const tdTouch=t=>{t.u=Date.now();save();render()};
+$('tdCars').onclick=e=>{const b=e.target.closest('[data-tdcar]');if(!b)return;current=b.dataset.tdcar;sel=openId=armed=null;svAll=false;ls('car',current);render()};
+$('tdForm').onsubmit=e=>{e.preventDefault();const name=$('tdNew').value.trim();if(!name)return;
+  todos.push({id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),car:current,name,done:false,doneDate:'',next:false,ord:tdNewOrd(),u:Date.now()});
+  $('tdNew').value='';save();render();$('tdNew').focus()};
+$('tdList').onclick=e=>{
+  if(e.target.closest('#tdDoneBtn')){tdDoneOpen=!tdDoneOpen;renderTodos();return}
+  const hit=k=>{const b=e.target.closest(`[data-${k}]`);return b?todos.find(t=>t.id===b.dataset[k]):null};
+  let t=hit('tdck');
+  if(t){t.done=!t.done;t.doneDate=t.done?today():'';t.next=false;tdTouch(t);return}
+  if((t=hit('tdpin'))){t.next=!t.next;t.ord=tdNewOrd();tdTouch(t);return}
+  if((t=hit('tdup'))){const l=todosOf(current).filter(x=>x.next&&!x.done).sort((a,b)=>a.ord-b.ord),o=l[l.indexOf(t)-1];
+    if(o){[t.ord,o.ord]=[o.ord,t.ord];o.u=Date.now();tdTouch(t)}return}
+  if((t=hit('tded'))){tdEdit=t.id;tdArmed=false;$('tdName').value=t.name;$('tdNext').checked=t.next;$('tdNextL').style.display=t.done?'none':'';$('tshcar').textContent=(curCar()||{}).name||'';
+    $('tdDel').classList.remove('sure');$('tdDel').textContent='امسح المهمة';openS('tdSheet')}
+};
+$('tdEditForm').onsubmit=e=>{e.preventDefault();const t=todos.find(x=>x.id===tdEdit),name=$('tdName').value.trim();if(!t||!name)return;
+  const nx=$('tdNext').checked&&!t.done;if(nx&&!t.next)t.ord=tdNewOrd();t.name=name;t.next=nx;closeS();tdTouch(t)};
+$('tdDel').onclick=()=>{
+  if(!tdArmed){tdArmed=true;$('tdDel').classList.add('sure');$('tdDel').textContent='متأكد؟ امسح';return}
+  del(tdEdit);todos=todos.filter(t=>t.id!==tdEdit);tdEdit=null;closeS();save();render();toast('اتمسحت')};
+
 // ---- timeline layout: fills and services on one road, newest first, a month at a time ----
 let layout='classic',tab='hist',tlMonths=6;
-try{layout=localStorage.getItem('layout')==='tl'?'tl':'classic';tab=['hist','rep','rem'].includes(localStorage.getItem('tab'))?localStorage.getItem('tab'):'hist'}catch(_){}
+try{layout=localStorage.getItem('layout')==='tl'?'tl':'classic';tab=['hist','rep','rem','todo'].includes(localStorage.getItem('tab'))?localStorage.getItem('tab'):'hist'}catch(_){}
 function applyLayout(){
   document.body.classList.toggle('lay-tl',layout==='tl');document.body.dataset.tab=tab;
   $('tnav').querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
@@ -967,7 +1057,7 @@ $('tl').onclick=e=>{
 $('tnav').onclick=e=>{
   if(e.target.closest('#tFab')){openS('addSheet');return}
   const b=e.target.closest('[data-tab]');if(!b)return;
-  if(b.dataset.tab==='more'){openSettings();return}
+
   tab=b.dataset.tab;ls('tab',tab);applyLayout();scrollTo(0,0);
 };
 $('addFill').onclick=()=>openFill(null);
@@ -1102,7 +1192,7 @@ $('cDel').onclick=()=>{
   const c=cars.find(x=>x.id===carEdit);if(!c||cars.length<2)return;
   const n=fills.filter(f=>f.car===c.id).length,ns=services.filter(s=>s.car===c.id).length;
   if(armedCar!==c.id){armedCar=c.id;$('cDel').classList.add('sure');$('cDel').textContent=n||ns?`هيتمسح معاها ${n} تفويلة و${ns} صيانة. متأكد؟`:'متأكد؟ امسح';return}
-  del(c.id);cars=cars.filter(x=>x.id!==c.id);fills=fills.filter(f=>f.car!==c.id);services=services.filter(s=>s.car!==c.id);
+  del(c.id);cars=cars.filter(x=>x.id!==c.id);fills=fills.filter(f=>f.car!==c.id);services=services.filter(s=>s.car!==c.id);todos=todos.filter(t=>t.car!==c.id);
   if(current===c.id){current=null;pickCar()}
   save();render();openSettings();toast('العربية اتمسحت');
 };
@@ -1337,7 +1427,9 @@ function normalize(d){
     return {id:String(f.id),car:c.id,date:String(f.date),odo:Number(f.odo),money:Number(f.money),price:Number(f.price)>0?Number(f.price):c.price,full:f.full!==false,u:Number(f.u)||0}}).filter(Boolean);
   const sv=(Array.isArray(d.services)?d.services:[]).map(s=>{const c=cs.find(c=>c.id===s.car);if(!c)return null;
     return {id:String(s.id),car:c.id,date:String(s.date),odo:Number(s.odo)||0,name:String(s.name||''),parts:Number(s.parts)||0,labor:Number(s.labor)||0,notes:String(s.notes||''),u:Number(s.u)||0}}).filter(Boolean);
-  return {cars:cs.sort((a,b)=>a.order-b.order),fills:fs,services:sv};
+  const td=(Array.isArray(d.todos)?d.todos:[]).map(t=>{const c=cs.find(c=>c.id===t.car);if(!c)return null;
+    return {id:String(t.id),car:c.id,name:String(t.name||''),done:!!t.done,doneDate:t.doneDate?String(t.doneDate):'',next:!!t.next&&!t.done,ord:Number(t.ord)||0,u:Number(t.u)||0}}).filter(Boolean);
+  return {cars:cs.sort((a,b)=>a.order-b.order),fills:fs,services:sv,todos:td};
 }
 // Maintenance history brought over from the Car Notes app; added once per car.
 // rows: [date, odometer, name, parts, labor]
@@ -1385,27 +1477,37 @@ function runSeeds(){
     meta.seeded.push(k);if(meta.sync)meta.sync.dirty=true});   // new history reaches the repo on the next sync
 }
 const del=id=>{(meta.dels=meta.dels||{})[id]=Date.now()};   // tombstone, so a deletion reaches the other phones
-function store(){try{localStorage.setItem(KEY,JSON.stringify({v:2,cars,fills,services,seeded:meta.seeded||[],dels:meta.dels||{},lastBackup:meta.lastBackup||null,snooze:meta.snooze||null,sync:meta.sync||null}));return true}catch(_){toast('مساحة التخزين مش متاحة');return false}}
+function store(){try{localStorage.setItem(KEY,JSON.stringify({v:2,cars,fills,services,todos,seeded:meta.seeded||[],dels:meta.dels||{},lastBackup:meta.lastBackup||null,snooze:meta.snooze||null,sync:meta.sync||null}));return true}catch(_){toast('مساحة التخزين مش متاحة');return false}}
 // every data change is stored on the phone first, then pushed to GitHub when sync is on
 let rev=0;
 function save(){rev++;if(meta.sync)meta.sync.dirty=true;const ok=store();queueSync(2500);return ok}
 
 // ---- sync: the whole dataset as one JSON file in the user's own private GitHub repo ----
 const TKEY='petrol.token',SFILE='petrol-data.json';
+// the old notes lists stay out of this public code: each one waits as a file in the private repo and is added once
+const TD_SEEDS=['todos-aveo','todos-astra'];
+async function pullTodoSeeds(){let added=false;
+  for(const k of TD_SEEDS){if(meta.seeded.includes(k))continue;
+    const r=await ghApi('/contents/'+k+'.json');if(r.status!==200)continue;
+    const c=cars.find(c=>new RegExp(k.slice(6),'i').test(c.id+' '+c.name));if(!c)continue;
+    JSON.parse(b64d((await r.json()).content)).forEach(([name,done],i)=>{const id=k+'-'+i;
+      if(!todos.some(t=>t.id===id)&&!(meta.dels||{})[id])todos.push({id,car:c.id,name,done:!!done,doneDate:'',next:false,ord:tdNewOrd(),u:Date.now()})});
+    meta.seeded.push(k);meta.sync.dirty=true;added=true}
+  return added}
 let syncBusy=false,syncTimer=null,syncErr='';
 const tok=()=>{try{return localStorage.getItem(TKEY)||''}catch(_){return ''}};
 const syncOn=()=>!!(meta.sync&&meta.sync.repo&&tok());
 function b64e(s){const b=new TextEncoder().encode(s);let o='';for(let i=0;i<b.length;i+=0x8000)o+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(o)}
 function b64d(c){const s=atob(c.replace(/\s/g,''));return new TextDecoder().decode(Uint8Array.from(s,ch=>ch.charCodeAt(0)))}
 const ghApi=(path,opt={})=>fetch('https://api.github.com/repos/'+meta.sync.repo+path,{cache:'no-store',...opt,headers:{Authorization:'Bearer '+tok(),Accept:'application/vnd.github+json'}});
-const syncDoc=()=>({app:'petrol',v:2,updated:new Date().toISOString(),cars,fills,services,seeded:meta.seeded||[],dels:meta.dels||{}});
+const syncDoc=()=>({app:'petrol',v:2,updated:new Date().toISOString(),cars,fills,services,todos,seeded:meta.seeded||[],dels:meta.dels||{}});
 // Two phones can both have changes: keep every record, the newest edit of each one wins, tombstones remove.
 function mergeIn(r){
   const n=normalize(r),dels={...(r.dels||{}),...(meta.dels||{})};
   const mix=(mine,theirs)=>{const m=new Map();[...theirs,...mine].forEach(x=>{const o=m.get(x.id);if(!o||(x.u||0)>=(o.u||0))m.set(x.id,x)});return [...m.values()].filter(x=>!dels[x.id])};
   cars=mix(cars,n.cars).sort((a,b)=>a.order-b.order);
   const has=x=>cars.some(c=>c.id===x.car);
-  fills=mix(fills,n.fills).filter(has);services=mix(services,n.services).filter(has);
+  fills=mix(fills,n.fills).filter(has);services=mix(services,n.services).filter(has);todos=mix(todos,n.todos).filter(has);
   meta.dels=dels;meta.seeded=[...new Set([...(meta.seeded||[]),...(Array.isArray(r.seeded)?r.seeded:[])])];
   pickCar();
 }
@@ -1419,6 +1521,7 @@ async function sync(){
     if(r.status===200){const j=await r.json();sha=j.sha;
       if(sha!==meta.sync.sha){mergeIn(JSON.parse(b64d(j.content)));meta.sync.sha=sha;changed=true}}
     else if(r.status!==404)throw r.status;
+    if(await pullTodoSeeds())changed=true;
     if(meta.sync.dirty||!sha){const at=rev,
       p=await ghApi('/contents/'+SFILE,{method:'PUT',body:JSON.stringify({message:'Petrol sync',content:b64e(JSON.stringify(syncDoc())),...(sha?{sha}:{})})});
       if(!p.ok)throw p.status;
@@ -1471,8 +1574,8 @@ function pickCar(){let saved=null;try{saved=localStorage.getItem('car')}catch(_)
 function load(){let d=null;try{d=JSON.parse(localStorage.getItem(KEY))}catch(_){}
   // a new phone starts empty; the Car Notes history only lands on a phone that already had data
   // (marked as already seeded, so a friend's own backups never pick it up either)
-  const fresh=!d||!Array.isArray(d.cars);if(fresh)d={cars:[],fills:[],seeded:Object.keys(SEED_SV)};
-  const n=normalize(d);cars=n.cars;fills=n.fills;services=n.services;
+  const fresh=!d||!Array.isArray(d.cars);if(fresh)d={cars:[],fills:[],seeded:[...Object.keys(SEED_SV),...TD_SEEDS]};
+  const n=normalize(d);cars=n.cars;fills=n.fills;services=n.services;todos=n.todos;
   meta={lastBackup:d.lastBackup||null,snooze:d.snooze||null,seeded:Array.isArray(d.seeded)?d.seeded:[],dels:d.dels||{},sync:d.sync||null};
   if(!fresh)runSeeds();store();pickCar();render()}
 load();
@@ -1481,7 +1584,7 @@ if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catc
 
 // ---- backup / restore ----
 async function doBackup(){
-  const json=JSON.stringify({app:'petrol',v:2,exported:new Date().toISOString(),cars,fills,services,seeded:meta.seeded},null,1),name=`petrol-backup-${today()}.json`;
+  const json=JSON.stringify({app:'petrol',v:2,exported:new Date().toISOString(),cars,fills,services,todos,seeded:meta.seeded},null,1),name=`petrol-backup-${today()}.json`;
   const done=t=>{meta.lastBackup=Date.now();meta.snooze=null;store();render();renderSettings();toast(t)};
   try{const file=new File([json],name,{type:'application/json'});
     if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'نسخة احتياطية - دفتر البنزين'});done('النسخة الاحتياطية اتبعتت');return}
@@ -1492,11 +1595,11 @@ async function doBackup(){
 $('exportBtn').onclick=doBackup;
 $('importFile').onchange=$('wImport').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(!Array.isArray(d.cars)||!Array.isArray(d.fills))throw 0;
-    const n=normalize(d),now=Date.now(),all=o=>[...o.cars,...o.fills,...o.services];
+    const n=normalize(d),now=Date.now(),all=o=>[...o.cars,...o.fills,...o.services,...o.todos];
     // the backup replaces what's here, on every synced phone too: what it lacks is deleted, what it holds is the newest
-    const keep=new Set(all(n).map(x=>x.id));all({cars,fills,services}).forEach(x=>{if(!keep.has(x.id))del(x.id)});
+    const keep=new Set(all(n).map(x=>x.id));all({cars,fills,services,todos}).forEach(x=>{if(!keep.has(x.id))del(x.id)});
     all(n).forEach(x=>{x.u=now;if(meta.dels)delete meta.dels[x.id]});
-    cars=n.cars;fills=n.fills;services=n.services;meta.seeded=Array.isArray(d.seeded)?d.seeded:[];runSeeds();
+    cars=n.cars;fills=n.fills;services=n.services;todos=n.todos;meta.seeded=Array.isArray(d.seeded)?d.seeded:[];runSeeds();
     current=null;sel=openId=armed=null;pickCar();save();render();closeS();toast(`اترجّع ${fills.length} تفويلة و${services.length} صيانة`)}
   catch(_){toast('الملف ده مش نسخة احتياطية من الدفتر')}};
 
@@ -1569,7 +1672,7 @@ const EN={
   'شهور · آخر مرة على':'months · last at','شهر · آخر مرة على':'months · last at',
   'اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.':'Enter after how many km or months, or untick the reminder.',
   'اكتب كل كام كيلو أو كل كام شهر.':'Enter an interval in km or months.','اكتب تاريخ آخر مرة.':'Enter the date it was last done.',
-  'شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
+  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
   'تفويلة':'Fill-up','اختار العربية':'Choose a car','امسح التفويلة':'Delete fill-up','الاستهلاك':'Consumption','ل/100':'L/100','آخر عداد':'Odometer','لسه مفيش قراءة عداد':'No odometer reading yet',
   'التفويلة الجاية تقريبًا':'Next fill-up, roughly','على عداد ~':'at ~','بمتوسط':'averaging','كم/يوم':'km/day','بنزين':'Fuel','· صيانة':'· maintenance','عداد':'odometer','اعرض الأقدم':'Show older',
 'اخفي':'Hide','اتخفى، والميعاد لسه في التذكيرات':'Hidden — it is still in Reminders',
