@@ -175,6 +175,7 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .tic svg{width:20px;height:20px}
 .tic[aria-pressed=true]{color:var(--accent)}
 .tic[aria-pressed=true] svg{fill:currentColor}
+.tic.sure{background:var(--bad);color:#fff}
 /* ===== timeline layout (body.lay-tl, picked in settings); body[data-tab] says which tab shows ===== */
 .tlhead,.tnav,#tl{display:none}
 .lay-tl .mast .top,.lay-tl #cars,.lay-tl #mline,.lay-tl .dock,.lay-tl [data-t=classic]{display:none!important}
@@ -489,6 +490,7 @@ html{padding-top:0}
   <symbol id="i-todo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="m8 12 3 3 5-6"/></symbol>
   <symbol id="i-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.500l2.600 5.500 6 .8-4.400 4.200 1.100 6-5.300-2.900-5.300 2.900 1.100-6-4.400-4.200 6-.8z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol>
   <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H8a5 5 0 1 1 1.1-9.9A6 6 0 0 1 20 11a4 4 0 0 1-2.5 8z"/><path d="m9 14 2 2 4-4"/></symbol>
@@ -942,14 +944,14 @@ function renderFills(rows,car){
 }
 
 // ---- to-do list, one per car: what's picked for the next visit on top, in order, then the rest, then what's done ----
-let tdEdit=null,tdArmed=false,tdDoneOpen=false;
+let tdEdit=null,tdArmed=false,tdDoneOpen=false,tdDelArm=null;
 const todosOf=id=>todos.filter(t=>t.car===id);
-const tdNewOrd=()=>Math.max(0,...todos.map(t=>t.ord))+1;
+const tdNewOrd=()=>Math.max(0,...todos.map(t=>t.ord))+1,tdTopOrd=()=>Math.min(1,...todos.map(t=>t.ord))-1;   // what's typed in goes on top of the list
 function tdRow(t,up){
   const star=`<button class="tic" type="button" data-tdpin="${esc(t.id)}" aria-pressed="${t.next}" aria-label="في الزيارة الجاية"><svg fill="none"><use href="#i-star"/></svg></button>`;
   return `<div class="td ${t.done?'done':''}"><button class="tck" type="button" data-tdck="${esc(t.id)}" aria-pressed="${t.done}" aria-label="خلصت"><svg><use href="#i-tick"/></svg></button>
     <button class="tnm" type="button" data-tded="${esc(t.id)}"><span data-user>${esc(t.name)}</span>${t.done&&t.doneDate?`<small>${niceY(t.doneDate)}</small>`:''}</button>
-    ${up?`<button class="tic" type="button" data-tdup="${esc(t.id)}" aria-label="قدّمها"><svg><use href="#i-up"/></svg></button>`:''}${t.done?'':star}</div>`;
+    ${up?`<button class="tic" type="button" data-tdup="${esc(t.id)}" aria-label="قدّمها"><svg><use href="#i-up"/></svg></button>`:''}${t.done?'':star}<button class="tic ${tdDelArm===t.id?'sure':''}" type="button" data-tddel="${esc(t.id)}" aria-label="${tdDelArm===t.id?'متأكد؟ امسح':'امسح'}"><svg><use href="#i-trash"/></svg></button></div>`;
 }
 function renderTodos(){
   const car=curCar();$('tdCard').hidden=!car;if(!car)return;
@@ -972,12 +974,17 @@ function renderTodos(){
 const tdTouch=t=>{t.u=Date.now();save();render()};
 $('tdCars').onclick=e=>{const b=e.target.closest('[data-tdcar]');if(!b)return;current=b.dataset.tdcar;sel=openId=armed=null;svAll=false;ls('car',current);render()};
 $('tdForm').onsubmit=e=>{e.preventDefault();const name=$('tdNew').value.trim();if(!name)return;
-  todos.push({id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),car:current,name,done:false,doneDate:'',next:false,ord:tdNewOrd(),u:Date.now()});
+  todos.push({id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),car:current,name,done:false,doneDate:'',next:false,ord:tdTopOrd(),u:Date.now()});
   $('tdNew').value='';save();render();$('tdNew').focus()};
 $('tdList').onclick=e=>{
-  if(e.target.closest('#tdDoneBtn')){tdDoneOpen=!tdDoneOpen;renderTodos();return}
   const hit=k=>{const b=e.target.closest(`[data-${k}]`);return b?todos.find(t=>t.id===b.dataset[k]):null};
-  let t=hit('tdck');
+  // delete takes two taps: the first turns the bin red, a tap anywhere else cancels
+  let t=hit('tddel');
+  if(t){if(tdDelArm===t.id){tdDelArm=null;del(t.id);todos=todos.filter(x=>x.id!==t.id);save();render();toast('اتمسحت')}
+    else{const id=tdDelArm=t.id;renderTodos();setTimeout(()=>{if(tdDelArm===id){tdDelArm=null;renderTodos()}},4000)}return}
+  if(tdDelArm){tdDelArm=null;renderTodos()}
+  if(e.target.closest('#tdDoneBtn')){tdDoneOpen=!tdDoneOpen;renderTodos();return}
+  t=hit('tdck');
   if(t){t.done=!t.done;t.doneDate=t.done?today():'';t.next=false;tdTouch(t);return}
   if((t=hit('tdpin'))){t.next=!t.next;t.ord=tdNewOrd();tdTouch(t);return}
   if((t=hit('tdup'))){const l=todosOf(current).filter(x=>x.next&&!x.done).sort((a,b)=>a.ord-b.ord),o=l[l.indexOf(t)-1];
@@ -1672,7 +1679,7 @@ const EN={
   'شهور · آخر مرة على':'months · last at','شهر · آخر مرة على':'months · last at',
   'اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.':'Enter after how many km or months, or untick the reminder.',
   'اكتب كل كام كيلو أو كل كام شهر.':'Enter an interval in km or months.','اكتب تاريخ آخر مرة.':'Enter the date it was last done.',
-  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
+  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','متأكد؟ امسح':'Sure? Delete','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
   'تفويلة':'Fill-up','اختار العربية':'Choose a car','امسح التفويلة':'Delete fill-up','الاستهلاك':'Consumption','ل/100':'L/100','آخر عداد':'Odometer','لسه مفيش قراءة عداد':'No odometer reading yet',
   'التفويلة الجاية تقريبًا':'Next fill-up, roughly','على عداد ~':'at ~','بمتوسط':'averaging','كم/يوم':'km/day','بنزين':'Fuel','· صيانة':'· maintenance','عداد':'odometer','اعرض الأقدم':'Show older',
 'اخفي':'Hide','اتخفى، والميعاد لسه في التذكيرات':'Hidden — it is still in Reminders',
