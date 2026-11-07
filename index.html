@@ -690,7 +690,7 @@ html{padding-top:0}
     <label>المصنعية (جنيه)<input type="number" id="sLabor" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
     <div class="full remind kindbox" id="sKindBox">
       <span class="kl">التصنيف</span>
-      <div class="seg mini" id="sKind" style="--cols:3"><button type="button" data-k="per">دورية</button><button type="button" data-k="rep">تصليح</button><button type="button" data-k="acc">كماليات</button></div>
+      <div class="seg mini" id="sKind" style="--cols:2"><button type="button" data-k="mt">صيانة</button><button type="button" data-k="acc">كماليات</button></div>
       <div class="rrow"><span>بتعيش</span><input type="number" id="sLifeKm" inputmode="numeric" min="0" step="500" aria-label="كم"><span>كم أو</span><input type="number" id="sLifeMo" inputmode="numeric" min="0" step="1" aria-label="شهور"><span>شهر</span></div>
       <p class="hint" id="sKindNote"></p>
     </div>
@@ -905,18 +905,18 @@ const SV_CATS=[['الفرامل',/تيل|طنابير|فرامل/],['زيت وف
 const svCat=n=>(SV_CATS.find(([,rx])=>rx.test(n))||['حاجات تانية'])[0];
 // Maintenance per km: every service is spread over its life (the car's reminder for it, else the user's own interval, else the usual one;
 // months become km at the car's usual km a day), and the period's fill-up stretch takes its share of each.
-// Repairs count as one year unless given a life; extras stay out of it (they're still in the spend).
+// Maintenance with no known life counts as one year unless given one; extras stay out of it (they're still in the spend).
 const SV_ACC=/فرش|قنصل|كفر|طاسات|شاحن|شاشة|شاشه|سماع|منظم|لوجو|داش|ليد|تلميع|دوكو|اسكرين|(^|\s)رش(\s|$)/;
 // a routine job's usual life: the car's reminder for it, else the user's own interval, else the usual one
 function svAutoLife(name,car){
   const k=prefKey(name),m=car.maint.find(m=>m.name.trim()===name.trim())||(k.startsWith('g:')&&car.maint.find(m=>prefKey(m.name)===k));
   return [m&&{km:m.every,mo:m.months},prefFor(car,name),guideFor(name,car)].find(o=>o&&(o.km||o.mo))||null}
-// routine, repair or extra: the user picks it in the service form, else it's guessed from the name
-const svGuessKind=(name,car)=>SV_ACC.test(name)?'acc':svAutoLife(name,car)?'per':'rep';
-// kind and life as the cost per km uses them; a repair with no life of its own counts as one year
+// maintenance or extra: the user picks it in the service form, else it's guessed from the name
+const svGuessKind=name=>SV_ACC.test(name)?'acc':'mt';
+// kind and life as the cost per km uses them; maintenance with no known life counts as one year
 function svLife(x,car){
-  const kind=x.kind||svGuessKind(x.name,car);if(kind==='acc')return {kind};
-  const auto=kind==='per'&&svAutoLife(x.name,car)||{km:0,mo:12};
+  const kind=x.kind||svGuessKind(x.name);if(kind==='acc')return {kind};
+  const auto=svAutoLife(x.name,car)||{km:0,mo:12};
   return x.lifeKm||x.lifeMo?{kind,km:x.lifeKm,mo:x.lifeMo}:{kind,km:auto.km,mo:auto.mo}}
 function mtPerKm(id,s){
   const car=cars.find(c=>c.id===id),all=stats(id,()=>true).s,kd=all&&all.kmDay;if(!s||!car||!(kd>0))return 0;
@@ -1376,9 +1376,9 @@ $('sName').addEventListener('input',()=>{svGuide();svKindShow()});
 let svKind='',kindTouched=false;
 function svKindShow(){
   const car=cars.find(c=>c.id===svCar);if(!car)return;const name=$('sName').value.trim();
-  if(!kindTouched)svKind=name?svGuessKind(name,car):'per';
+  if(!kindTouched)svKind=svGuessKind(name);
   $('sKind').querySelectorAll('[data-k]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===svKind));
-  const auto=svKind==='per'&&name&&svAutoLife(name,car)||{km:0,mo:12};
+  const auto=name&&svAutoLife(name,car)||{km:0,mo:12};
   $('sLifeKm').placeholder=auto.km?String(auto.km):'';$('sLifeMo').placeholder=auto.mo?String(auto.mo):'';
   $('sKindBox').classList.toggle('acc',svKind==='acc');
   $('sKindNote').textContent=svKind==='acc'?'الكماليات بتفضل في المصروف، بس مش بتدخل في تكلفة الكيلو.'
@@ -1554,7 +1554,7 @@ function normalize(d){
   const fs=(Array.isArray(d.fills)?d.fills:[]).map(f=>{const c=cs.find(c=>c.id===f.car);if(!c)return null;
     return {id:String(f.id),car:c.id,date:String(f.date),odo:Number(f.odo),money:Number(f.money),price:Number(f.price)>0?Number(f.price):c.price,full:f.full!==false,u:Number(f.u)||0}}).filter(Boolean);
   const sv=(Array.isArray(d.services)?d.services:[]).map(s=>{const c=cs.find(c=>c.id===s.car);if(!c)return null;
-    return {id:String(s.id),car:c.id,date:String(s.date),odo:Number(s.odo)||0,name:String(s.name||''),parts:Number(s.parts)||0,labor:Number(s.labor)||0,notes:String(s.notes||''),kind:['per','rep','acc'].includes(s.kind)?s.kind:'',lifeKm:Number(s.lifeKm)||0,lifeMo:Number(s.lifeMo)||0,u:Number(s.u)||0}}).filter(Boolean);
+    return {id:String(s.id),car:c.id,date:String(s.date),odo:Number(s.odo)||0,name:String(s.name||''),parts:Number(s.parts)||0,labor:Number(s.labor)||0,notes:String(s.notes||''),kind:s.kind==='acc'?'acc':['mt','per','rep'].includes(s.kind)?'mt':'',lifeKm:Number(s.lifeKm)||0,lifeMo:Number(s.lifeMo)||0,u:Number(s.u)||0}}).filter(Boolean);
   const td=(Array.isArray(d.todos)?d.todos:[]).map(t=>{const c=cs.find(c=>c.id===t.car);if(!c)return null;
     return {id:String(t.id),car:c.id,name:String(t.name||''),place:String(t.place||''),cost:Number(t.cost)||0,done:!!t.done,doneDate:t.doneDate?String(t.doneDate):'',next:!!t.next&&!t.done,ord:Number(t.ord)||0,u:Number(t.u)||0}}).filter(Boolean);
   return {cars:cs.sort((a,b)=>a.order-b.order),fills:fs,services:sv,todos:td};
@@ -1800,7 +1800,7 @@ const EN={
   'شهور · آخر مرة على':'months · last at','شهر · آخر مرة على':'months · last at',
   'اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.':'Enter after how many km or months, or untick the reminder.',
   'اكتب كل كام كيلو أو كل كام شهر.':'Enter an interval in km or months.','اكتب تاريخ آخر مرة.':'Enter the date it was last done.',
-  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','التصنيف':'Category','دورية':'Routine','تصليح':'Repair','كماليات':'Extra','بتعيش':'Lasts','الكماليات بتفضل في المصروف، بس مش بتدخل في تكلفة الكيلو.':'Extras stay in the spending but are left out of the cost per km.','دي المدة اللي بتتوزع عليها في تكلفة الكيلو. سيبها فاضية تاخد المقترح.':'The cost per km spreads it over this life. Leave it empty to take the suggestion.','التطبيق خمّن التصنيف من الاسم، غيّره لو مش مظبوط. والمدة دي اللي بتتوزع عليها في تكلفة الكيلو.':'The type was guessed from the name; change it if it is wrong. The cost per km spreads it over this life.','+ مهمة جديدة':'+ New task','مهمة':'Task','اتضافت':'Added','التكلفة التقريبية':'Estimated cost','التكلفة التقريبية (جنيه)':'Estimated cost (EGP)','من غير سعر':'without a price','القايمة':'List','حسب الورشة':'By workshop','الورشة أو المكان':'Workshop or place','من غير ورشة':'No workshop','سجّلها كصيانة':'Log as service','اختياري':'Optional','متأكد؟ امسح':'Sure? Delete','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
+  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','التصنيف':'Category','صيانة':'Maintenance','كماليات':'Extra','بتعيش':'Lasts','الكماليات بتفضل في المصروف، بس مش بتدخل في تكلفة الكيلو.':'Extras stay in the spending but are left out of the cost per km.','دي المدة اللي بتتوزع عليها في تكلفة الكيلو. سيبها فاضية تاخد المقترح.':'The cost per km spreads it over this life. Leave it empty to take the suggestion.','التطبيق خمّن التصنيف من الاسم، غيّره لو مش مظبوط. والمدة دي اللي بتتوزع عليها في تكلفة الكيلو.':'The type was guessed from the name; change it if it is wrong. The cost per km spreads it over this life.','+ مهمة جديدة':'+ New task','مهمة':'Task','اتضافت':'Added','التكلفة التقريبية':'Estimated cost','التكلفة التقريبية (جنيه)':'Estimated cost (EGP)','من غير سعر':'without a price','القايمة':'List','حسب الورشة':'By workshop','الورشة أو المكان':'Workshop or place','من غير ورشة':'No workshop','سجّلها كصيانة':'Log as service','اختياري':'Optional','متأكد؟ امسح':'Sure? Delete','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
   'تفويلة':'Fill-up','اختار العربية':'Choose a car','امسح التفويلة':'Delete fill-up','الاستهلاك':'Consumption','ل/100':'L/100','آخر عداد':'Odometer','لسه مفيش قراءة عداد':'No odometer reading yet',
   'التفويلة الجاية تقريبًا':'Next fill-up, roughly','على عداد ~':'at ~','بمتوسط':'averaging','كم/يوم':'km/day','بنزين':'Fuel','· صيانة':'· maintenance','عداد':'odometer','اعرض الأقدم':'Show older',
 'اخفي':'Hide','اتخفى، والميعاد لسه في التذكيرات':'Hidden — it is still in Reminders',
