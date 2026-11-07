@@ -104,6 +104,20 @@ h1{font-family:var(--f-display);font-weight:700;font-size:22px;margin:0}
 .avg i{position:absolute;inset-inline-end:0;top:-18px;font-style:normal;font-size:10.5px;color:var(--muted);background:var(--panel);padding-inline:4px}
 .xl{display:flex;gap:8px;margin-top:6px}
 .xl.short{gap:6px}
+.xl.many span{font-size:9.5px;overflow:visible}
+.bar.stk{display:flex;flex-direction:column;justify-content:flex-start;overflow:visible}
+.bar.stk .mx{display:block;width:100%;background:var(--accent);border-radius:6px 6px 0 0}
+.lgd{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:-4px 0 10px}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:5px;vertical-align:-1px}
+.stat .l2{font-size:12px;color:var(--muted)}
+.stat .l2 b{color:var(--ink);font-size:14px}
+.mxr{display:grid;gap:5px;padding:10px 0;border-top:1px solid var(--line)}
+.mxr:first-child{border-top:0;padding-top:2px}
+.mxh{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.mxh span{font-size:13px;color:var(--muted);white-space:nowrap}
+.mxh span b{color:var(--ink);font-size:15px}
+.mxr .pb i{background:var(--accent)}
+.mxr small{font-size:12px;color:var(--muted)}
 .xl span{flex:1;min-width:0;text-align:center;font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap}
 .detail{margin-top:12px;background:var(--soft);border-radius:12px;padding:10px 12px;font-size:13px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .detail div{display:grid}
@@ -150,6 +164,8 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .rrow{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);flex-wrap:wrap}
 .rrow input{width:96px;flex:none;padding:8px 10px;font-size:16px}
 .remind .hint{margin:0}
+.kindbox .kl{font-size:14px;color:var(--ink)}
+.kindbox.acc .rrow{display:none}
 .remsug b{color:var(--ink);font-weight:600}
 .rrow input::placeholder{color:var(--muted);opacity:.4}
 .remind.off .rrow,.remind.off .hint{opacity:.45;pointer-events:none}
@@ -446,10 +462,16 @@ html{padding-top:0}
   </section>
 
   <section class="card" id="monthCard" aria-labelledby="mch" data-t="rep">
-    <h2 id="mch">مصروف البنزين الشهري <small id="mavg"></small></h2>
+    <h2 id="mch">مصروف العربية الشهري <small id="mavg"></small></h2>
+    <div class="lgd"><span><i style="background:var(--petrol)"></i>بنزين</span><span><i style="background:var(--accent)"></i>صيانة</span></div>
     <div class="chart short" id="mchart"></div>
     <div class="xl short" id="mxl"></div>
     <p class="note">دوس على أي شهر عشان تشوف أرقامه بس.</p>
+  </section>
+
+  <section class="card" id="mxCard" aria-labelledby="mxh" data-t="rep">
+    <h2 id="mxh">فلوس الصيانة راحت فين <small id="mxTot"></small></h2>
+    <div id="mx"></div>
   </section>
 
   <section class="card" aria-labelledby="lh" style="padding-bottom:12px" data-t="classic">
@@ -666,6 +688,12 @@ html{padding-top:0}
     <p class="hint full svhint" id="sHint" data-user hidden></p>
     <label>المبلغ / قطع غيار (جنيه)<input type="number" id="sParts" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
     <label>المصنعية (جنيه)<input type="number" id="sLabor" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
+    <div class="full remind kindbox" id="sKindBox">
+      <span class="kl">التصنيف</span>
+      <div class="seg mini" id="sKind" style="--cols:3"><button type="button" data-k="per">دورية</button><button type="button" data-k="rep">تصليح</button><button type="button" data-k="acc">كماليات</button></div>
+      <div class="rrow"><span>بتعيش</span><input type="number" id="sLifeKm" inputmode="numeric" min="0" step="500" aria-label="كم"><span>كم أو</span><input type="number" id="sLifeMo" inputmode="numeric" min="0" step="1" aria-label="شهور"><span>شهر</span></div>
+      <p class="hint" id="sKindNote"></p>
+    </div>
     <label class="full">ملحوظات<textarea id="sNotes" rows="2" maxlength="300" placeholder="مثلاً: نوع الزيت، اسم الميكانيكي، الضمان…"></textarea></label>
     <div class="live" id="sLive" style="grid-template-columns:1fr"></div>
     <div class="full remind">
@@ -773,7 +801,7 @@ function stats(id,inRange=inPeriod){
   let s=null;
   if(t.length){const km=sum(t,r=>r.seg.km),L=sum(t,r=>r.seg.L),M=sum(t,r=>r.seg.M);
     const days=(new Date(t.at(-1).date)-new Date(t[0].seg.from))/DAY;
-    s={km,L,M,l100:L/km*100,kml:km/L,epk:M/km,kmDay:days>0?km/days:NaN,month:days>0?M/days*30:NaN}}
+    s={km,L,M,from:t[0].seg.from,to:t.at(-1).date,l100:L/km*100,kml:km/L,epk:M/km,kmDay:days>0?km/days:NaN,month:days>0?M/days*30:NaN}}
   return {rows,s,spent:sum(rows,r=>r.money),liters:sum(rows,r=>r.liters)};
 }
 // A reminder is due by km, by months, or by whichever comes first when it has both.
@@ -818,8 +846,9 @@ function render(){
     $('gnum').textContent='—';$('gkml').textContent='—';$('gstatus').className='status';$('gstatus').textContent='مفيش بيانات كفاية في الفترة دي';}
 
   // stats
-  const big=[['تكلفة الكيلو',s?fmt(s.epk,2):'—','جنيه'],['اتصرف',fmt(spent,0),'جنيه']],small=[['المسافة',s?fmt(s.km,0):'—','كم'],['اللترات',fmt(liters,1),'لتر'],['يوميًا',s?fmt(s.kmDay,0):'—','كم'],['في الشهر',s?fmt(s.month,0):'—','جنيه']];
-  $('stats').innerHTML=big.map(([l,v,u])=>`<div class="stat big"><span class="l">${l}</span><span class="v"><span class="n">${v}</span><small>${u}</small></span></div>`).join('')
+  const mtKm=mtPerKm(current,s);
+  const big=[['تكلفة الكيلو',s?fmt(s.epk,2):'—','جنيه',mtKm?`<span class="l2"><span>مع الصيانة</span> <b class="n">${fmt(s.epk+mtKm,2)}</b> <span>ج</span></span>`:''],['اتصرف',fmt(spent,0),'جنيه']],small=[['المسافة',s?fmt(s.km,0):'—','كم'],['اللترات',fmt(liters,1),'لتر'],['يوميًا',s?fmt(s.kmDay,0):'—','كم'],['في الشهر',s?fmt(s.month,0):'—','جنيه']];
+  $('stats').innerHTML=big.map(([l,v,u,x])=>`<div class="stat big"><span class="l">${l}</span><span class="v"><span class="n">${v}</span><small>${u}</small></span>${x||''}</div>`).join('')
     +`<div class="mini4">${small.map(([l,v,u])=>`<div><span class="l">${l}</span><span class="v n">${v}</span><small>${u}</small></div>`).join('')}</div>`;
 
   // masthead line + this car's good/average/high zones around the gauge
@@ -845,7 +874,7 @@ function render(){
       <div><span class="l">لترات</span><span class="v n">${fmt(r.seg.L,2)}</span></div>
       <div><span class="l">كم/لتر</span><span class="v n">${fmt(r.kml)}</span></div>`}else $('detail').hidden=true;}
 
-  renderMonths();renderMaint();renderTodos();renderFills(rows,car);renderTL();
+  renderMonths();renderMx();renderMaint();renderTodos();renderFills(rows,car);renderTL();
   live();
 }
 
@@ -868,17 +897,57 @@ function renderAlerts(){
   $('alerts').innerHTML=out.join('');
 }
 
+// where the maintenance money went, by kind of work, for the chosen period
+const SV_CATS=[['الفرامل',/تيل|طنابير|فرامل/],['زيت وفلاتر',/زيت|فلتر/],['الإشعال والحقن',/بوجيه|موبين|رشاش|سلوك|MAF|حساس|البيئ|دورة البنزين/],
+  ['الموتور والتبريد',/سير|كاتين|طلمب|مياه|مياة|ردياتير|قاعد|قواعد|ترس|تبريد|شكمان/],['العفشة والدركسيون',/دركسيون|دريكسيون|مقص|مساعد|ميزان|بارات|بيانو|جلب|عفشجي|زوايا/],
+  ['الكاوتش والعجل',/كاوتش|جنوط|ترصيص|طاسات/],['التكييف',/تكييف/],['الكهربا والإضاءة',/كهرب|ضفير|لمب|ليد|نور|بطاري|شاحن|سنتر|لوك|كالون|زجاج|مالتي|ذراع/],
+  ['الصالون والبودي',/فرش|سمكر|دوكو|رش|تلميع|قنصل|كفر|اكصدام/]];
+const svCat=n=>(SV_CATS.find(([,rx])=>rx.test(n))||['حاجات تانية'])[0];
+// Maintenance per km: every service is spread over its life (the car's reminder for it, else the user's own interval, else the usual one;
+// months become km at the car's usual km a day), and the period's fill-up stretch takes its share of each.
+// Repairs count as one year unless given a life; extras stay out of it (they're still in the spend).
+const SV_ACC=/فرش|قنصل|كفر|طاسات|شاحن|شاشة|شاشه|سماع|منظم|لوجو|داش|ليد|تلميع|دوكو|اسكرين|(^|\s)رش(\s|$)/;
+// a routine job's usual life: the car's reminder for it, else the user's own interval, else the usual one
+function svAutoLife(name,car){
+  const k=prefKey(name),m=car.maint.find(m=>m.name.trim()===name.trim())||(k.startsWith('g:')&&car.maint.find(m=>prefKey(m.name)===k));
+  return [m&&{km:m.every,mo:m.months},prefFor(car,name),guideFor(name,car)].find(o=>o&&(o.km||o.mo))||null}
+// routine, repair or extra: the user picks it in the service form, else it's guessed from the name
+const svGuessKind=(name,car)=>SV_ACC.test(name)?'acc':svAutoLife(name,car)?'per':'rep';
+// kind and life as the cost per km uses them; a repair with no life of its own counts as one year
+function svLife(x,car){
+  const kind=x.kind||svGuessKind(x.name,car);if(kind==='acc')return {kind};
+  const auto=kind==='per'&&svAutoLife(x.name,car)||{km:0,mo:12};
+  return x.lifeKm||x.lifeMo?{kind,km:x.lifeKm,mo:x.lifeMo}:{kind,km:auto.km,mo:auto.mo}}
+function mtPerKm(id,s){
+  const car=cars.find(c=>c.id===id),all=stats(id,()=>true).s,kd=all&&all.kmDay;if(!s||!car||!(kd>0))return 0;
+  const a=new Date(s.from).getTime(),b=new Date(s.to).getTime();let tot=0;
+  servicesOf(id).forEach(x=>{const L=svLife(x,car);if(L.kind==='acc')return;
+    const days=Math.min(L.km?L.km/kd:Infinity,L.mo?L.mo*30.44:Infinity),life=(Number.isFinite(days)?days:365)*DAY;
+    const st=new Date(x.date).getTime(),ov=Math.min(st+life,b)-Math.max(st,a);
+    if(ov>0)tot+=svTotal(x)*ov/life});
+  return tot/s.km;
+}
+function renderMx(){
+  const sv=servicesOf(current).filter(s=>inPeriod(s.date)),tot=sum(sv,svTotal);
+  $('mxCard').hidden=!tot;if(!tot)return;
+  const g={};sv.forEach(s=>{const k=svCat(s.name);(g[k]=g[k]||{v:0,names:[]}).v+=svTotal(s);g[k].names.push(s.name)});
+  $('mxTot').innerHTML=`<span class="n">${fmt(tot,0)}</span> ج`;
+  $('mx').innerHTML=Object.entries(g).sort((a,b)=>b[1].v-a[1].v).map(([k,{v,names}])=>{const u=[...new Set(names)];
+    return `<div class="mxr"><div class="mxh"><b>${k}</b><span><b class="n">${fmt(v,0)}</b> ج · <span class="n">${Math.round(v/tot*100)}</span>%</span></div><div class="pb"><i style="width:${(v/tot*100).toFixed(1)}%"></i></div>
+      <small><span data-user>${u.slice(0,3).map(esc).join(' · ')}</span>${u.length>3?` <span>و</span> <span class="n">${u.length-3}</span> <span>تاني</span>`:''}</small></div>`}).join('');
+}
 function renderMonths(){
-  const by={};fillsOf(current).forEach(f=>{const m=f.date.slice(0,7);by[m]=(by[m]||0)+f.money});
+  const by={},mt={};fillsOf(current).forEach(f=>{const m=f.date.slice(0,7);by[m]=(by[m]||0)+f.money});
+  servicesOf(current).forEach(s=>{const m=s.date.slice(0,7);mt[m]=(mt[m]||0)+svTotal(s);by[m]=(by[m]||0)+svTotal(s)});
   const ms=Object.keys(by).sort().slice(-12);
   $('monthCard').hidden=!ms.length;if(!ms.length)return;
   const vals=ms.map(m=>by[m]),max=Math.max(...vals)*1.12,avg=sum(vals,v=>v)/vals.length,many=ms.length>6;
   const lbl=v=>many&&v>=1000?fmt(v/1000,1)+'k':fmt(v,0);
   const picked=ms.includes(period);
   $('mavg').innerHTML=ms.length>1?`المتوسط <span class="n">${fmt(avg,0)}</span> ج/شهر`:'';
-  $('mchart').innerHTML=ms.map((m,i)=>`<button class="bar" type="button" data-month="${m}" aria-pressed="${picked?m===period:true}" style="height:${(vals[i]/max*100).toFixed(1)}%" aria-label="${monthName(m)}: ${fmt(vals[i],0)} جنيه"><span class="t n">${lbl(vals[i])}</span></button>`).join('')
+  $('mchart').innerHTML=ms.map((m,i)=>`<button class="bar stk" type="button" data-month="${m}" aria-pressed="${picked?m===period:true}" style="height:${(vals[i]/max*100).toFixed(1)}%" aria-label="${monthName(m)}: ${fmt(vals[i],0)} جنيه"><i class="mx" style="height:${((mt[m]||0)/vals[i]*100).toFixed(1)}%"></i><span class="t n">${lbl(vals[i])}</span></button>`).join('')
     +(ms.length>1?`<div class="avg" style="bottom:${(avg/max*100).toFixed(1)}%"></div>`:'');
-  $('mxl').innerHTML=ms.map(m=>`<span>${many?+m.slice(5)+'/'+m.slice(2,4):MONTHS[+m.slice(5)-1]}</span>`).join('');
+  $('mxl').classList.toggle('many',many);$('mxl').innerHTML=ms.map(m=>`<span>${many?+m.slice(5)+'/'+m.slice(2,4):MONTHS[+m.slice(5)-1]}</span>`).join('');
 }
 
 // ---- car comparison (settings) with its own date range ----
@@ -1302,7 +1371,20 @@ function svGuide(){
   if(!remTouched){$('sRem').checked=!!sug&&(!svEdit||sug.src==='rem');$('sRemKm').value='';$('sRemMo').value=''}
   $('sRem').closest('.remind').classList.toggle('off',!$('sRem').checked);
 }
-$('sName').addEventListener('input',svGuide);
+$('sName').addEventListener('input',()=>{svGuide();svKindShow()});
+// kind and life: guessed from the name until the user picks; the guessed life sits grey in the boxes
+let svKind='',kindTouched=false;
+function svKindShow(){
+  const car=cars.find(c=>c.id===svCar);if(!car)return;const name=$('sName').value.trim();
+  if(!kindTouched)svKind=name?svGuessKind(name,car):'per';
+  $('sKind').querySelectorAll('[data-k]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===svKind));
+  const auto=svKind==='per'&&name&&svAutoLife(name,car)||{km:0,mo:12};
+  $('sLifeKm').placeholder=auto.km?String(auto.km):'';$('sLifeMo').placeholder=auto.mo?String(auto.mo):'';
+  $('sKindBox').classList.toggle('acc',svKind==='acc');
+  $('sKindNote').textContent=svKind==='acc'?'الكماليات بتفضل في المصروف، بس مش بتدخل في تكلفة الكيلو.'
+    :kindTouched?'دي المدة اللي بتتوزع عليها في تكلفة الكيلو. سيبها فاضية تاخد المقترح.':'التطبيق خمّن التصنيف من الاسم، غيّره لو مش مظبوط. والمدة دي اللي بتتوزع عليها في تكلفة الكيلو.';
+}
+$('sKind').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;svKind=b.dataset.k;kindTouched=true;svKindShow()};
 $('sRem').addEventListener('change',()=>{remTouched=true;svGuide()});
 ['sRemKm','sRemMo'].forEach(id=>$(id).addEventListener('input',()=>{remTouched=true}));
 $('mName').addEventListener('input',()=>showGuide('mHint',$('mName').value.trim(),curCar()));
@@ -1319,7 +1401,8 @@ function openSvc(id,pre,fromRef=false){
   $('sParts').value=s&&s.parts?s.parts:'';$('sLabor').value=s&&s.labor?s.labor:'';$('sNotes').value=s?s.notes:(p.notes||'');
   const cur=curOdo(car.id);$('sOdo').placeholder=Number.isFinite(cur)?String(cur):'';
   $('sErr').hidden=true;$('sSaveMore').hidden=!!s;$('sDel').hidden=!s;$('sDel').className='btn del';$('sDel').textContent='امسح';
-  remTouched=false;svGuide();fillSug();svLive();openS('svSheet');
+  svKind=s&&s.kind||'';kindTouched=!!svKind;$('sLifeKm').value=s&&s.lifeKm||'';$('sLifeMo').value=s&&s.lifeMo||'';
+  remTouched=false;svGuide();svKindShow();fillSug();svLive();openS('svSheet');
   if(!s)setTimeout(()=>$(p.name?'sParts':'sName').focus(),250);
 }
 function saveSvc(more){
@@ -1332,7 +1415,8 @@ function saveSvc(more){
   const boxVal=id=>{const e=$(id);return Number(e.value!==''?e.value:e.placeholder)||0};
   const remOn=$('sRem').checked,rk=boxVal('sRemKm'),rm=boxVal('sRemMo');
   if(remOn&&!(rk>0)&&!(rm>0))return fail('اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.');
-  const rec={car:car.id,date,odo,name,parts:r2(parts),labor:r2(labor),notes,u:Date.now()};
+  const lifeKm=Math.max(Number($('sLifeKm').value)||0,0),lifeMo=Math.max(Number($('sLifeMo').value)||0,0),acc=svKind==='acc';
+  const rec={car:car.id,date,odo,name,parts:r2(parts),labor:r2(labor),notes,kind:kindTouched?svKind:'',lifeKm:acc?0:lifeKm,lifeMo:acc?0:lifeMo,u:Date.now()};
   if(svEdit)Object.assign(services.find(s=>s.id===svEdit),rec);
   else services.push({...rec,id:'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)});
   // a reminder with the same name restarts from this service
@@ -1345,7 +1429,7 @@ function saveSvc(more){
     car.u=Date.now();
   }else if(m&&(odo>m.last||date>(m.lastDate||''))){if(odo>m.last)m.last=odo;if(date>(m.lastDate||''))m.lastDate=date;car.u=Date.now();msg+=` · تذكير ${m.name} اتحدّث`}
   if(!save())return;render();toast(msg);
-  if(more){$('sName').value='';$('sParts').value='';$('sLabor').value='';$('sNotes').value='';remTouched=false;svGuide();svLive();fillSug();$('sName').focus();return}
+  if(more){$('sName').value='';$('sParts').value='';$('sLabor').value='';$('sNotes').value='';$('sLifeKm').value='';$('sLifeMo').value='';svKind='';kindTouched=false;remTouched=false;svGuide();svKindShow();svLive();fillSug();$('sName').focus();return}
   svEdit=null;svDone();
 }
 // back to the maintenance reference if that's where the edit started
@@ -1470,7 +1554,7 @@ function normalize(d){
   const fs=(Array.isArray(d.fills)?d.fills:[]).map(f=>{const c=cs.find(c=>c.id===f.car);if(!c)return null;
     return {id:String(f.id),car:c.id,date:String(f.date),odo:Number(f.odo),money:Number(f.money),price:Number(f.price)>0?Number(f.price):c.price,full:f.full!==false,u:Number(f.u)||0}}).filter(Boolean);
   const sv=(Array.isArray(d.services)?d.services:[]).map(s=>{const c=cs.find(c=>c.id===s.car);if(!c)return null;
-    return {id:String(s.id),car:c.id,date:String(s.date),odo:Number(s.odo)||0,name:String(s.name||''),parts:Number(s.parts)||0,labor:Number(s.labor)||0,notes:String(s.notes||''),u:Number(s.u)||0}}).filter(Boolean);
+    return {id:String(s.id),car:c.id,date:String(s.date),odo:Number(s.odo)||0,name:String(s.name||''),parts:Number(s.parts)||0,labor:Number(s.labor)||0,notes:String(s.notes||''),kind:['per','rep','acc'].includes(s.kind)?s.kind:'',lifeKm:Number(s.lifeKm)||0,lifeMo:Number(s.lifeMo)||0,u:Number(s.u)||0}}).filter(Boolean);
   const td=(Array.isArray(d.todos)?d.todos:[]).map(t=>{const c=cs.find(c=>c.id===t.car);if(!c)return null;
     return {id:String(t.id),car:c.id,name:String(t.name||''),place:String(t.place||''),cost:Number(t.cost)||0,done:!!t.done,doneDate:t.doneDate?String(t.doneDate):'',next:!!t.next&&!t.done,ord:Number(t.ord)||0,u:Number(t.u)||0}}).filter(Boolean);
   return {cars:cs.sort((a,b)=>a.order-b.order),fills:fs,services:sv,todos:td};
@@ -1659,7 +1743,7 @@ const EN={
   'آخر عداد':'Odometer','آخر تفويلة':'Last fill-up','النهارده':'today','امبارح':'yesterday',
   'تكلفة الكيلو':'Cost per km','اتصرف':'Spent','المسافة':'Distance','اللترات':'Liters','يوميًا':'Per day','في الشهر':'Per month','كم':'km','لتر':'L',
   'استهلاك كل تفويلة':'Consumption per fill-up','دوس على أي عمود':'Tap any bar','مفيش تفويلات كفاية في الفترة دي.':'Not enough fill-ups in this period.','المتوسط':'Avg',
-  'مسافة':'Distance','لترات':'Liters','كم/لتر':'km/L','مصروف البنزين الشهري':'Monthly fuel spend','ج/شهر':'EGP/month','دوس على أي شهر عشان تشوف أرقامه بس.':'Tap a month to see only its numbers.',
+  'مسافة':'Distance','لترات':'Liters','كم/لتر':'km/L','مصروف البنزين الشهري':'Monthly fuel spend','مصروف العربية الشهري':'Monthly car spend','بنزين':'Fuel','مع الصيانة':'with maintenance','فلوس الصيانة راحت فين':'Where the maintenance money went','الفرامل':'Brakes','زيت وفلاتر':'Oil & filters','الإشعال والحقن':'Ignition & injection','الموتور والتبريد':'Engine & cooling','العفشة والدركسيون':'Suspension & steering','الكاوتش والعجل':'Tires & wheels','التكييف':'A/C','الكهربا والإضاءة':'Electrics & lights','الصالون والبودي':'Interior & body','حاجات تانية':'Other','و':'and','تاني':'more','ج/شهر':'EGP/month','دوس على أي شهر عشان تشوف أرقامه بس.':'Tap a month to see only its numbers.',
   // alerts
   'قرّب ميعاد':'Due soon:','جه ميعاد':'Due now:','شوف':'View','فاضل':'In','متأخر':'Overdue by','جرّب تاني':'Retry',
   'لسه ما خدتش نسخة احتياطية من بياناتك.':"You haven't backed up your data yet.",'آخر نسخة احتياطية من':'Last backup was','يوم.':'days ago.','أيام.':'days ago.','خد نسخة':'Back up','بعدين':'Later',
@@ -1716,7 +1800,7 @@ const EN={
   'شهور · آخر مرة على':'months · last at','شهر · آخر مرة على':'months · last at',
   'اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.':'Enter after how many km or months, or untick the reminder.',
   'اكتب كل كام كيلو أو كل كام شهر.':'Enter an interval in km or months.','اكتب تاريخ آخر مرة.':'Enter the date it was last done.',
-  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','+ مهمة جديدة':'+ New task','مهمة':'Task','اتضافت':'Added','التكلفة التقريبية':'Estimated cost','التكلفة التقريبية (جنيه)':'Estimated cost (EGP)','من غير سعر':'without a price','القايمة':'List','حسب الورشة':'By workshop','الورشة أو المكان':'Workshop or place','من غير ورشة':'No workshop','سجّلها كصيانة':'Log as service','اختياري':'Optional','متأكد؟ امسح':'Sure? Delete','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
+  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','التصنيف':'Category','دورية':'Routine','تصليح':'Repair','كماليات':'Extra','بتعيش':'Lasts','الكماليات بتفضل في المصروف، بس مش بتدخل في تكلفة الكيلو.':'Extras stay in the spending but are left out of the cost per km.','دي المدة اللي بتتوزع عليها في تكلفة الكيلو. سيبها فاضية تاخد المقترح.':'The cost per km spreads it over this life. Leave it empty to take the suggestion.','التطبيق خمّن التصنيف من الاسم، غيّره لو مش مظبوط. والمدة دي اللي بتتوزع عليها في تكلفة الكيلو.':'The type was guessed from the name; change it if it is wrong. The cost per km spreads it over this life.','+ مهمة جديدة':'+ New task','مهمة':'Task','اتضافت':'Added','التكلفة التقريبية':'Estimated cost','التكلفة التقريبية (جنيه)':'Estimated cost (EGP)','من غير سعر':'without a price','القايمة':'List','حسب الورشة':'By workshop','الورشة أو المكان':'Workshop or place','من غير ورشة':'No workshop','سجّلها كصيانة':'Log as service','اختياري':'Optional','متأكد؟ امسح':'Sure? Delete','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
   'تفويلة':'Fill-up','اختار العربية':'Choose a car','امسح التفويلة':'Delete fill-up','الاستهلاك':'Consumption','ل/100':'L/100','آخر عداد':'Odometer','لسه مفيش قراءة عداد':'No odometer reading yet',
   'التفويلة الجاية تقريبًا':'Next fill-up, roughly','على عداد ~':'at ~','بمتوسط':'averaging','كم/يوم':'km/day','بنزين':'Fuel','· صيانة':'· maintenance','عداد':'odometer','اعرض الأقدم':'Show older',
 'اخفي':'Hide','اتخفى، والميعاد لسه في التذكيرات':'Hidden — it is still in Reminders',
