@@ -158,8 +158,7 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .brand.chevy{width:34px;height:13px}
 /* to-do list, one per car */
 #tdCars{margin-bottom:10px}
-.tdadd{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:12px}
-.tdadd input{min-width:0}
+#tdAdd{margin-bottom:12px}
 .tdg{margin-bottom:14px}
 .tdg.next{background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:14px;padding:10px 10px 4px;margin-inline:-4px}
 .td{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
@@ -234,10 +233,10 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .tnav span.badge:after{content:attr(data-n);position:absolute;top:-4px;inset-inline-end:8px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--bad);color:#fff;font-size:10.5px;font-weight:700;line-height:17px;text-align:center;font-family:var(--f-body)}
 .tnav .tfab{justify-self:center;width:58px;height:58px;border-radius:50%;background:var(--accent);color:var(--accent-ink);place-items:center;margin-top:-30px;box-shadow:0 6px 18px rgba(224,138,30,.4);border:4px solid var(--panel);padding:0}
 .tnav .tfab svg{width:26px;height:26px}
-.acts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-bottom:6px}
+.acts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-bottom:6px}
 .acts button{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:18px 8px;font-weight:600;font-size:15px;color:var(--ink)}
 .acts i{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;margin:0 auto 8px;color:#fff}
-.acts i svg{width:26px;height:26px}.acts .af{background:var(--accent)}.acts .as{background:var(--petrol)}
+.acts i svg{width:26px;height:26px}.acts .af{background:var(--accent)}.acts .as{background:var(--petrol)}.acts .at{background:var(--good)}
 .nocar .tnav,.nocar .tlsum,.nocar #tlChip{display:none!important}
 .welcome{display:grid;gap:12px}
 .welcome h2{font-size:17px;margin:0}
@@ -471,7 +470,7 @@ html{padding-top:0}
   <section class="card" id="tdCard" aria-labelledby="tdh" data-t="todo">
     <h2 id="tdh">المهام <small id="tdCount"></small></h2>
     <div class="seg mini" id="tdCars" data-user></div>
-    <form class="tdadd" id="tdForm"><input type="text" id="tdNew" maxlength="120" autocomplete="off" placeholder="عاوز تعمل إيه؟" aria-label="مهمة جديدة"><button class="btn pri small" type="submit">زوّد</button></form>
+    <button class="btn ghost wide" type="button" id="tdAdd">+ مهمة جديدة</button>
     <div class="seg mini" id="tdView" style="--cols:2"><button type="button" data-v="list">القايمة</button><button type="button" data-v="place">حسب الورشة</button></div>
     <div id="tdList"></div>
   </section>
@@ -512,6 +511,7 @@ html{padding-top:0}
   <div class="acts">
     <button type="button" id="addFill"><i class="af"><svg><use href="#i-pump"/></svg></i>تفويلة</button>
     <button type="button" id="addSvc"><i class="as"><svg><use href="#i-wrench"/></svg></i>صيانة</button>
+    <button type="button" id="addTodo"><i class="at"><svg><use href="#i-todo"/></svg></i>مهمة</button>
   </div>
 </div>
 
@@ -643,9 +643,9 @@ html{padding-top:0}
 
 <div class="sheet" id="tdSheet" role="dialog" aria-modal="true" aria-labelledby="tsh">
   <div class="grab"></div>
-  <h3 id="tsh">تعديل المهمة <span id="tshcar" data-user></span></h3>
+  <h3 id="tsh"><b id="tshT" style="font-weight:600">تعديل المهمة</b> <span id="tshcar" data-user></span></h3>
   <form class="form" id="tdEditForm" novalidate>
-    <label class="full">المهمة<input type="text" id="tdName" maxlength="120" autocomplete="off"></label>
+    <label class="full">المهمة<input type="text" id="tdName" maxlength="120" autocomplete="off" placeholder="عاوز تعمل إيه؟"></label>
     <label class="full">الورشة أو المكان<input type="text" id="tdPlace" list="tdPlaces" maxlength="40" autocomplete="off" placeholder="اختياري"></label>
     <datalist id="tdPlaces"></datalist>
     <label class="full">التكلفة التقريبية (جنيه)<input type="number" id="tdCost" inputmode="numeric" min="0" step="1" placeholder="اختياري"></label>
@@ -999,9 +999,15 @@ function tdToService(t){const cur=curOdo(t.car);openSvc(null,{name:t.name,odo:Nu
 $('tdLog').onclick=()=>{const t=todos.find(x=>x.id===tdEdit);if(t)tdToService(t)};
 $('tdView').onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;tdView=b.dataset.v;ls('tdView',tdView);renderTodos()};
 $('tdCars').onclick=e=>{const b=e.target.closest('[data-tdcar]');if(!b)return;current=b.dataset.tdcar;sel=openId=armed=null;svAll=false;ls('car',current);render()};
-$('tdForm').onsubmit=e=>{e.preventDefault();const name=$('tdNew').value.trim();if(!name)return;
-  todos.push({id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),car:current,name,place:'',cost:0,done:false,doneDate:'',next:false,ord:tdTopOrd(),u:Date.now()});
-  $('tdNew').value='';save();render();$('tdNew').focus()};
+// one sheet for a new task (from + or the card's button) and for editing one: name, workshop, cost, next visit
+function tdOpen(t){
+  tdEdit=t?t.id:null;tdArmed=false;$('tshT').textContent=t?'تعديل المهمة':'مهمة جديدة';$('tshcar').textContent=(curCar()||{}).name||'';
+  $('tdName').value=t?t.name:'';$('tdPlace').value=t&&t.place||'';$('tdCost').value=t&&t.cost||'';$('tdNext').checked=!!(t&&t.next);
+  $('tdNextL').style.display=t&&t.done?'none':'';$('tdLog').hidden=!(t&&t.done);$('tdDel').hidden=!t;
+  $('tdPlaces').innerHTML=[...new Set(todos.map(x=>x.place).filter(Boolean))].map(p=>`<option value="${esc(p)}">`).join('');
+  $('tdDel').classList.remove('sure');$('tdDel').textContent='امسح المهمة';openS('tdSheet');
+}
+$('tdAdd').onclick=$('addTodo').onclick=()=>tdOpen(null);
 $('tdList').onclick=e=>{
   const hit=k=>{const b=e.target.closest(`[data-${k}]`);return b?todos.find(t=>t.id===b.dataset[k]):null};
   // delete takes two taps: the first turns the bin red, a tap anywhere else cancels
@@ -1017,10 +1023,13 @@ $('tdList').onclick=e=>{
   if((t=hit('tdpin'))){t.next=!t.next;t.ord=tdNewOrd();tdTouch(t);return}
   if((t=hit('tdup'))){const l=todosOf(current).filter(x=>x.next&&!x.done).sort((a,b)=>a.ord-b.ord),o=l[l.indexOf(t)-1];
     if(o){[t.ord,o.ord]=[o.ord,t.ord];o.u=Date.now();tdTouch(t)}return}
-  if((t=hit('tded'))){tdEdit=t.id;tdArmed=false;$('tdName').value=t.name;$('tdNext').checked=t.next;$('tdNextL').style.display=t.done?'none':'';$('tdPlace').value=t.place||'';$('tdCost').value=t.cost||'';$('tdPlaces').innerHTML=[...new Set(todos.map(x=>x.place).filter(Boolean))].map(p=>`<option value="${esc(p)}">`).join('');$('tdLog').hidden=!t.done;$('tshcar').textContent=(curCar()||{}).name||'';
-    $('tdDel').classList.remove('sure');$('tdDel').textContent='امسح المهمة';openS('tdSheet')}
+  if((t=hit('tded')))tdOpen(t)
 };
-$('tdEditForm').onsubmit=e=>{e.preventDefault();const t=todos.find(x=>x.id===tdEdit),name=$('tdName').value.trim();if(!t||!name)return;
+$('tdEditForm').onsubmit=e=>{e.preventDefault();const name=$('tdName').value.trim();if(!name){$('tdName').focus();return}
+  let t=todos.find(x=>x.id===tdEdit);
+  // a new task goes on top of the list (or at the end of the next visit, if it's picked for it)
+  if(!t){t={id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),car:current,name,place:'',cost:0,done:false,doneDate:'',next:false,ord:tdTopOrd(),u:0};todos.push(t);
+    if(layout==='tl'&&tab!=='todo'){tab='todo';ls('tab',tab);applyLayout()}toast('اتضافت')}
   const nx=$('tdNext').checked&&!t.done;if(nx&&!t.next)t.ord=tdNewOrd();t.name=name;t.next=nx;t.place=$('tdPlace').value.trim();t.cost=Math.max(Number($('tdCost').value)||0,0);closeS();tdTouch(t)};
 $('tdDel').onclick=()=>{
   if(!tdArmed){tdArmed=true;$('tdDel').classList.add('sure');$('tdDel').textContent='متأكد؟ امسح';return}
@@ -1707,7 +1716,7 @@ const EN={
   'شهور · آخر مرة على':'months · last at','شهر · آخر مرة على':'months · last at',
   'اكتب بعد كام كيلو أو كام شهر، أو شيل علامة التذكير.':'Enter after how many km or months, or untick the reminder.',
   'اكتب كل كام كيلو أو كل كام شهر.':'Enter an interval in km or months.','اكتب تاريخ آخر مرة.':'Enter the date it was last done.',
-  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','التكلفة التقريبية':'Estimated cost','التكلفة التقريبية (جنيه)':'Estimated cost (EGP)','من غير سعر':'without a price','القايمة':'List','حسب الورشة':'By workshop','الورشة أو المكان':'Workshop or place','من غير ورشة':'No workshop','سجّلها كصيانة':'Log as service','اختياري':'Optional','متأكد؟ امسح':'Sure? Delete','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
+  'المهام':'To-do','الزيارة الجاية':'Next visit','في الزيارة الجاية':'In the next visit','عاوز أعملها':'To do','مهمة جديدة':'New task','عاوز تعمل إيه؟':'What do you want to do?','زوّد':'Add','خلصت':'Done','قدّمها':'Move up','+ مهمة جديدة':'+ New task','مهمة':'Task','اتضافت':'Added','التكلفة التقريبية':'Estimated cost','التكلفة التقريبية (جنيه)':'Estimated cost (EGP)','من غير سعر':'without a price','القايمة':'List','حسب الورشة':'By workshop','الورشة أو المكان':'Workshop or place','من غير ورشة':'No workshop','سجّلها كصيانة':'Log as service','اختياري':'Optional','متأكد؟ امسح':'Sure? Delete','تعديل المهمة':'Edit task','المهمة':'Task','امسح المهمة':'Delete task','اخفي اللي خلص':'Hide done','اللي خلص (':'Done (','باقي':'Left','خلص':'Done','اكتب فوق الحاجات اللي عاوز تعملها في العربية دي.':'Write above what you want to do on this car.','دوس على النجمة جنب أي حاجة عشان تحطها في الزيارة الجاية.':'Tap the star next to anything to put it in the next visit.','شكل التطبيق':'App layout','الأساسي':'Classic','الخط الزمني':'Timeline','السجل':'Log','التقارير':'Reports','التذكيرات':'Reminders','المزيد':'More','إضافة':'Add',
   'تفويلة':'Fill-up','اختار العربية':'Choose a car','امسح التفويلة':'Delete fill-up','الاستهلاك':'Consumption','ل/100':'L/100','آخر عداد':'Odometer','لسه مفيش قراءة عداد':'No odometer reading yet',
   'التفويلة الجاية تقريبًا':'Next fill-up, roughly','على عداد ~':'at ~','بمتوسط':'averaging','كم/يوم':'km/day','بنزين':'Fuel','· صيانة':'· maintenance','عداد':'odometer','اعرض الأقدم':'Show older',
 'اخفي':'Hide','اتخفى، والميعاد لسه في التذكيرات':'Hidden — it is still in Reminders',
