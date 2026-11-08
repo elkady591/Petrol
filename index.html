@@ -11,7 +11,24 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Petrol">
-<script>var LANG='ar';try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;var sy=localStorage.getItem('sty');if(sy&&sy!=='base')document.documentElement.dataset.sty=sy;var pl=localStorage.getItem('pal');if(pl&&pl!=='petrol')document.documentElement.dataset.pal=pl;if(localStorage.getItem('lang')==='en'){LANG='en';document.documentElement.lang='en';document.documentElement.dir='ltr'}}catch(_){}</script>
+<script>
+// two colours picked in settings: the main one (header, buttons) and the second one (add button, highlights); each has a lighter shade for dark mode
+var PAL1=[['petrol','#1E4C5C','#2F6C80'],['navy','#1F3F73','#3762A8'],['sky','#0284C7','#0EA5E9'],['emerald','#047857','#10A37A'],['olive','#556B2F','#6E8A3D'],['coffee','#6F4518','#8F5B2A'],['mustard','#A16207','#B7791F'],['red','#B3261E','#D9443A'],['rose','#BE185D','#DB2777'],['violet','#6D28D9','#8B5CF6'],['black','#111827','#2B3240']];
+var PAL2=[['orange','#D8841A','#F0A23A'],['yellow','#EAB308','#FACC15'],['mint','#10B981','#6EE7B7'],['red','#DC2626','#F87171'],['pink','#EC4899','#F472B6'],['lavender','#8B5CF6','#C4B5FD'],['teal','#0E7490','#22B8CF'],['charcoal','#1E293B','#E2E8F0']];
+function palGet(list,key,def){try{var v=localStorage.getItem(key)}catch(_){}for(var i=0;i<list.length;i++)if(list[i][0]===v)return list[i];return list[0]}
+function palInk(h){var n=parseInt(h.slice(1),16),y=(0.299*(n>>16)+0.587*(n>>8&255)+0.114*(n&255))/255;return y>0.62?'#1B1205':'#fff'}
+function PAL_INIT(){
+  // the old single colour themes become a pair
+  try{var old=localStorage.getItem('pal');if(old&&!localStorage.getItem('pal1')){var m={navy:['navy','orange'],green:['emerald','yellow'],purple:['violet','pink'],wine:['red','yellow'],graphite:['black','orange']}[old];if(m){localStorage.setItem('pal1',m[0]);localStorage.setItem('pal2',m[1])}}localStorage.removeItem('pal')}catch(_){}
+  var a=palGet(PAL1,'pal1'),b=palGet(PAL2,'pal2'),el=document.getElementById('palCss');
+  if(!el){el=document.createElement('style');el.id='palCss';document.head.appendChild(el)}
+  var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.content=a[1];
+  if(a[0]==='petrol'&&b[0]==='orange'){el.textContent='';return}
+  var lt='--petrol:'+a[1]+';--petrol-deep:'+a[1]+';--accent:'+b[1]+';--accent-ink:'+palInk(b[1]),dk='--petrol:'+a[2]+';--petrol-deep:'+a[1]+';--accent:'+b[2]+';--accent-ink:'+palInk(b[2]);
+  el.textContent='html:root{'+lt+'}html:root[data-theme="dark"]{'+dk+'}@media (prefers-color-scheme:dark){html:root:not([data-theme="light"]){'+dk+'}}';
+}
+</script>
+<script>var LANG='ar';try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;var sy=localStorage.getItem('sty');if(sy&&sy!=='base')document.documentElement.dataset.sty=sy;PAL_INIT();if(localStorage.getItem('lang')==='en'){LANG='en';document.documentElement.lang='en';document.documentElement.dir='ltr'}}catch(_){}</script>
 <style>html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap">
@@ -35,27 +52,13 @@
   --good:#5CC48A; --warn:#E6B34E; --bad:#F07F72; --track:#26323D; --scrim:rgba(0,0,0,.6); color-scheme:dark}
 :root[data-theme="light"]{color-scheme:light}
 :root{--petrol-deep:#1E4C5C}
-/* colour themes: only the main colour and the accent change; petrol is the default */
-:root[data-pal="navy"]{--petrol:#1F3F73;--petrol-deep:#1F3F73;--accent:#E08A1E}
-:root[data-pal="navy"][data-theme="dark"]{--petrol:#3762A8;--accent:#F2A640}
-@media (prefers-color-scheme:dark){:root[data-pal="navy"]:not([data-theme="light"]){--petrol:#3762A8;--accent:#F2A640}}
-:root[data-pal="green"]{--petrol:#1D5641;--petrol-deep:#1D5641;--accent:#D89B1A}
-:root[data-pal="green"][data-theme="dark"]{--petrol:#2D7A5C;--accent:#EDB640}
-@media (prefers-color-scheme:dark){:root[data-pal="green"]:not([data-theme="light"]){--petrol:#2D7A5C;--accent:#EDB640}}
-:root[data-pal="purple"]{--petrol:#45367A;--petrol-deep:#45367A;--accent:#E0785A}
-:root[data-pal="purple"][data-theme="dark"]{--petrol:#6754A8;--accent:#F2967C}
-@media (prefers-color-scheme:dark){:root[data-pal="purple"]:not([data-theme="light"]){--petrol:#6754A8;--accent:#F2967C}}
-:root[data-pal="wine"]{--petrol:#6A2232;--petrol-deep:#6A2232;--accent:#D8A11A}
-:root[data-pal="wine"][data-theme="dark"]{--petrol:#97384B;--accent:#EDBA40}
-@media (prefers-color-scheme:dark){:root[data-pal="wine"]:not([data-theme="light"]){--petrol:#97384B;--accent:#EDBA40}}
-:root[data-pal="graphite"]{--petrol:#2D3540;--petrol-deep:#2D3540;--accent:#D8841A}
-:root[data-pal="graphite"][data-theme="dark"]{--petrol:#4A5563;--accent:#F0A23A}
-@media (prefers-color-scheme:dark){:root[data-pal="graphite"]:not([data-theme="light"]){--petrol:#4A5563;--accent:#F0A23A}}
+/* colour pair: built by PAL_INIT in the head */
 #stySeg button{padding-inline:2px;font-size:12.5px}
-.pals{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
-.pals button{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:8px 2px 6px;display:grid;justify-items:center;gap:5px;font:inherit;font-size:11.5px;color:var(--muted);min-width:0}
-.pals i{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--c) 0 58%,var(--a) 58%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
-.pals button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--ink)}
+.sw{display:flex;flex-wrap:wrap;gap:10px;padding:2px}
+.sw button{width:34px;height:34px;border-radius:50%;border:0;padding:0;background:var(--c);box-shadow:inset 0 0 0 2px rgba(255,255,255,.3)}
+.sw button[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:2px}
+.swh{display:flex;justify-content:space-between;align-items:baseline}
+.swh small{font-size:12.5px;color:var(--muted);font-weight:600}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -678,8 +681,10 @@ html{padding-top:0}
   <div class="sec">
     <h4>المظهر</h4>
     <div class="seg mini" id="themeSeg" style="--cols:3"><button type="button" data-t="auto">زي الموبايل</button><button type="button" data-t="light">فاتح</button><button type="button" data-t="dark">داكن</button></div>
-    <h4 style="margin-top:14px">الألوان</h4>
-    <div class="pals" id="palSeg"></div>
+    <h4 class="swh" style="margin-top:14px">اللون الأساسي <small id="pal1Name"></small></h4>
+    <div class="sw" id="pal1Seg"></div>
+    <h4 class="swh" style="margin-top:14px">اللون التاني <small id="pal2Name"></small></h4>
+    <div class="sw" id="pal2Seg"></div>
     <h4 style="margin-top:14px">التصميم</h4>
     <div class="seg mini" id="stySeg" style="--cols:5"><button type="button" data-sty="base">الأساسي</button><button type="button" data-sty="soft">ناعم</button><button type="button" data-sty="glass">زجاجي</button><button type="button" data-sty="bold">عريض</button><button type="button" data-sty="compact">مضغوط</button></div>
     <h4 style="margin-top:14px">شكل التطبيق</h4>
@@ -1374,19 +1379,18 @@ $('fillForm').onsubmit=e=>{
 };
 
 // ---- settings ----
-const PALS=[['petrol','بترولي','#1E4C5C','#D8841A'],['navy','كحلي','#1F3F73','#E08A1E'],['green','أخضر','#1D5641','#D89B1A'],['purple','بنفسجي','#45367A','#E0785A'],['wine','نبيتي','#6A2232','#D8A11A'],['graphite','رمادي','#2D3540','#D8841A']];
+const PAL_N={petrol:'بترولي',navy:'كحلي',sky:'سماوي',emerald:'زمردي',olive:'زيتوني',coffee:'بني',mustard:'خردلي',red:'أحمر',rose:'وردي',violet:'بنفسجي',black:'أسود',orange:'برتقالي',yellow:'أصفر',mint:'نعناعي',pink:'بمبي',lavender:'لافندر',teal:'تركواز',charcoal:'فحمي'};
 const STYLES=['base','soft','glass','bold','compact'];
 function styNow(){let v='base';try{v=localStorage.getItem('sty')||'base'}catch(_){}return STYLES.includes(v)?v:'base'}
 function applySty(v){ls('sty',v);if(v==='base')delete document.documentElement.dataset.sty;else document.documentElement.dataset.sty=v;renderSettings()}
-function palNow(){let p='petrol';try{p=localStorage.getItem('pal')||'petrol'}catch(_){}return PALS.some(x=>x[0]===p)?p:'petrol'}
-function applyPal(p){ls('pal',p);if(p==='petrol')delete document.documentElement.dataset.pal;else document.documentElement.dataset.pal=p;
-  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=PALS.find(x=>x[0]===p)[2];renderSettings()}
+function applyPal(key,v){ls(key,v);PAL_INIT();renderSettings()}
 function themeNow(){let t='auto';try{t=localStorage.getItem('theme')||'auto'}catch(_){}return t}
 function applyTheme(t){ls('theme',t);if(t==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;renderSettings()}
 function renderSettings(){
   const t=themeNow();$('themeSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
   const sy=styNow();$('stySeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sty===sy));
-  const pl=palNow();$('palSeg').innerHTML=PALS.map(([k,n,c,a])=>`<button type="button" data-pal="${k}" aria-pressed="${k===pl}"><i style="--c:${c};--a:${a}"></i><span>${n}</span></button>`).join('');
+  [['pal1',PAL1],['pal2',PAL2]].forEach(([key,list])=>{const cur=palGet(list,key)[0];
+    $(key+'Seg').innerHTML=list.map(([k,c])=>`<button type="button" data-k="${k}" aria-pressed="${k===cur}" aria-label="${PAL_N[k]}" style="--c:${c}"></button>`).join('');$(key+'Name').textContent=PAL_N[cur]});
   $('carList').innerHTML=cars.map(c=>`<button class="crow" type="button" data-car="${esc(c.id)}"><span><b>${brandIcon(c.name)}${esc(c.name)}</b><span>سعر اللتر <span class="n">${fmt(c.price,2)}</span> · كويس تحت <span class="n">${fmt(c.good,1)}</span> · عالي من <span class="n">${fmt(c.bad,1)}</span></span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>`).join('');
   $('cmpSec').hidden=cars.length<2;renderSync();
   $('langSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===LANG));
@@ -1396,7 +1400,7 @@ function renderSettings(){
 }
 function openSettings(){renderSettings();openS('setSheet')}
 $('stySeg').onclick=e=>{const b=e.target.closest('[data-sty]');if(b)applySty(b.dataset.sty)};
-$('palSeg').onclick=e=>{const b=e.target.closest('[data-pal]');if(b)applyPal(b.dataset.pal)};
+['pal1','pal2'].forEach(key=>$(key+'Seg').onclick=e=>{const b=e.target.closest('[data-k]');if(b)applyPal(key,b.dataset.k)});
 $('themeSeg').onclick=e=>{const b=e.target.closest('[data-t]');if(b)applyTheme(b.dataset.t)};
 $('langSeg').onclick=e=>{const b=e.target.closest('[data-l]');if(b&&b.dataset.l!==LANG){ls('lang',b.dataset.l);location.reload()}};
 $('carList').onclick=e=>{const b=e.target.closest('[data-car]');if(b)openCar(b.dataset.car)};
@@ -1868,7 +1872,7 @@ const EN={
   'تحت':'Under','لـ':'to','فوق':'Over','يعني':'i.e.','كم لكل لتر':'km per liter','سعر اللتر دلوقتي:':'Price per liter now:','جنيه':'EGP','ج':'EGP','تعديل':'Edit','حفظ':'Save',
   'السعر الجديد هيتطبق على التفويلات الجاية بس، والقديمة بتفضل بسعرها.':'The new price applies to future fill-ups only; old ones keep their price.',
   'آخر عداد':'Odometer','آخر تفويلة':'Last fill-up','النهارده':'today','امبارح':'yesterday',
-  'تكلفة الكيلو':'Cost per km','اتصرف':'Spent','المسافة':'Distance','اللترات':'Liters','يوميًا':'Per day','متوسط اليوم':'Avg per day','الألوان':'Colours','التصميم':'Design','ناعم':'Soft','زجاجي':'Glass','عريض':'Bold','مضغوط':'Compact','بترولي':'Petrol','كحلي':'Navy','أخضر':'Green','بنفسجي':'Purple','نبيتي':'Wine','رمادي':'Graphite','إجمالي تكلفة الكيلو':'Total cost per km','بنزين للكيلو':'Fuel per km','صيانة للكيلو':'Maintenance per km','اتصرف إجمالي':'Total spent','التفويلات':'Fill-ups','متوسط تكلفة الكيلو':'Avg cost per km','متوسط بنزين الشهر':'Avg fuel / month','متوسط الشهر':'Avg per month','في الشهر':'Per month','كم':'km','لتر':'L',
+  'تكلفة الكيلو':'Cost per km','اتصرف':'Spent','المسافة':'Distance','اللترات':'Liters','يوميًا':'Per day','متوسط اليوم':'Avg per day','اللون الأساسي':'Main colour','اللون التاني':'Second colour','زمردي':'Emerald','زيتوني':'Olive','بني':'Coffee','خردلي':'Mustard','أحمر':'Red','وردي':'Rose','بنفسجي':'Violet','أسود':'Black','برتقالي':'Orange','أصفر':'Yellow','نعناعي':'Mint','بمبي':'Pink','لافندر':'Lavender','تركواز':'Teal','فحمي':'Charcoal','سماوي':'Sky','التصميم':'Design','ناعم':'Soft','زجاجي':'Glass','عريض':'Bold','مضغوط':'Compact','بترولي':'Petrol','كحلي':'Navy','إجمالي تكلفة الكيلو':'Total cost per km','بنزين للكيلو':'Fuel per km','صيانة للكيلو':'Maintenance per km','اتصرف إجمالي':'Total spent','التفويلات':'Fill-ups','متوسط تكلفة الكيلو':'Avg cost per km','متوسط بنزين الشهر':'Avg fuel / month','متوسط الشهر':'Avg per month','في الشهر':'Per month','كم':'km','لتر':'L',
   'استهلاك كل تفويلة':'Consumption per fill-up','دوس على أي عمود':'Tap any bar','مفيش تفويلات كفاية في الفترة دي.':'Not enough fill-ups in this period.','المتوسط':'Avg',
   'مسافة':'Distance','لترات':'Liters','كم/لتر':'km/L','مصروف البنزين الشهري':'Monthly fuel spend','مصروف العربية الشهري':'Monthly car spend','بنزين':'Fuel','مع الصيانة':'+ service','اتصرف بنزين':'Spent on fuel','وصيانة':'Service','فلوس الصيانة راحت فين':'Where the maintenance money went','الفرامل':'Brakes','زيت وفلاتر':'Oil & filters','الإشعال والحقن':'Ignition & injection','الموتور والتبريد':'Engine & cooling','العفشة والدركسيون':'Suspension & steering','الكاوتش والعجل':'Tires & wheels','التكييف':'A/C','الكهربا والإضاءة':'Electrics & lights','الصالون والبودي':'Interior & body','حاجات تانية':'Other','و':'and','تاني':'more','ج/شهر':'EGP/month','دوس على أي شهر عشان تشوف أرقامه بس.':'Tap a month to see only its numbers.',
   // alerts
