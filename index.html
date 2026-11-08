@@ -1130,7 +1130,7 @@ function renderTL(){
   const ps=stats(car.id).s,fuel=sum(fills.filter(f=>f.car===car.id&&inPeriod(f.date)),f=>f.money),mnt=sum(services.filter(s=>s.car===car.id&&inPeriod(s.date)),svTotal);
   $('tlSum').innerHTML=`<button type="button" class="perpill" data-per>${esc(periodLabel())}<svg><use href="#i-chev"/></svg></button>
     <button type="button" data-per class="w3 ${ps?band(ps.l100,car)[0]:''}"><span>الاستهلاك</span><b class="n">${ps?fmt(ps.l100):'—'}</b> <small>ل/100</small></button>
-    <button type="button" data-per class="w3"><span>تكلفة الكيلو</span><b class="n">${ps?fmt(ps.epk,2):'—'}</b> <small>ج</small></button>
+    <button type="button" data-per class="w3"><span>تكلفة الكيلو</span><b class="n">${ps?fmt(ps.epk+mtPerKm(car.id,ps),2):'—'}</b> <small>ج</small></button>
     <button type="button" data-per><span>بنزين</span><b class="n">${fmt(fuel,0)}</b> <small>ج</small></button>
     <button type="button" data-per><span>صيانة</span><b class="n">${fmt(mnt,0)}</b> <small>ج</small></button>
     <button type="button" data-per class="tot"><span>الإجمالي</span><b class="n">${fmt(fuel+mnt,0)}</b> <small>ج</small></button>`;
