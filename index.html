@@ -388,21 +388,9 @@ html{padding-top:0}
 .stat.big{padding:14px 16px}
 .stat.big .v{font-size:28px}
 .mini4{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 0}
-.mini4>button{display:grid;justify-items:center;align-content:start;text-align:center;gap:1px;border:0;border-inline-start:1px solid var(--line);border-radius:0;background:none;color:inherit;font:inherit;padding:0 2px;min-width:0;cursor:pointer}
-.mini4>button:first-child{border:0}
-.mini4 .l{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px;max-width:100%}
-.mini4 .l>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ii{flex:none;display:inline-grid;place-items:center;width:12px;height:12px;border-radius:50%;border:1px solid currentColor;font-size:8.5px;font-style:normal;font-weight:700;line-height:1;opacity:.75}
-.pline{grid-column:1/-1;text-align:center;font-size:12px;color:var(--muted);margin-top:-4px}
-.pline b{color:var(--ink);font-weight:600}
-.ifp{margin:0 0 12px;font-size:13.5px;color:var(--muted)}
-.ifn{margin:10px 0 0;font-size:12.5px;color:var(--muted)}
-.icalc{background:var(--soft);border-radius:12px;padding:10px 12px;display:grid;gap:7px;font-size:14px}
-.icalc+.icalc{margin-top:10px}
-.icalc>div{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.icalc b{white-space:nowrap}
-.icalc small{font-size:11.5px;font-weight:500;color:var(--muted)}
-.icalc .t{border-top:1px solid var(--line);padding-top:7px;font-weight:700}
+.mini4 div{display:grid;justify-items:center;text-align:center;gap:1px;border-inline-start:1px solid var(--line);min-width:0}
+.mini4 div:first-child{border:0}
+.mini4 .l{font-size:11px;color:var(--muted)}
 .mini4 .v{font-size:16px;font-weight:700}
 .mini4 small{font-size:10.5px;color:var(--muted)}
 </style>
@@ -555,12 +543,6 @@ html{padding-top:0}
   <div class="grab"></div>
   <h3 id="pph">الأرقام عن أنهي فترة؟</h3>
   <div class="clist" id="perList"></div>
-</div>
-
-<div class="sheet" id="infoSheet" role="dialog" aria-modal="true" aria-labelledby="ifh">
-  <div class="grab"></div>
-  <h3 id="ifh"></h3>
-  <div id="ifBody"></div>
 </div>
 
 <div class="sheet" id="carPick" role="dialog" aria-modal="true" aria-labelledby="cpk">
@@ -763,7 +745,7 @@ const iso=d=>{d=new Date(d);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());r
 const today=()=>iso(new Date());
 const nice=s=>{const d=new Date(s+'T00:00');return `${d.getDate()} ${MONTHS[d.getMonth()]}`};
 const niceY=s=>nice(s)+(s.slice(0,4)===today().slice(0,4)?'':' '+s.slice(0,4));
-const DAY=864e5,MIN_MONTH_DAYS=14,G_MIN=4,G_MAX=20,KEY='petrol.v1';
+const DAY=864e5,G_MIN=4,G_MAX=20,KEY='petrol.v1';
 const band=(v,c)=>{const g=c&&c.good||9,b=c&&c.bad||12;return v<g?['good','استهلاك كويس']:v<b?['warn','استهلاك متوسط']:['bad','استهلاك عالي']};
 const RATE={good:'كويس',warn:'متوسط',bad:'عالي'};
 const ls=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}};
@@ -821,7 +803,7 @@ function stats(id,inRange=inPeriod){
   let s=null;
   if(t.length){const km=sum(t,r=>r.seg.km),L=sum(t,r=>r.seg.L),M=sum(t,r=>r.seg.M);
     const days=(new Date(t.at(-1).date)-new Date(t[0].seg.from))/DAY;
-    s={km,L,M,days,from:t[0].seg.from,to:t.at(-1).date,odoFrom:t[0].odo-t[0].seg.km,odoTo:t.at(-1).odo,l100:L/km*100,kml:km/L,epk:M/km,kmDay:days>0?km/days:NaN,month:days>0?M/days*30:NaN}}
+    s={km,L,M,from:t[0].seg.from,to:t.at(-1).date,l100:L/km*100,kml:km/L,epk:M/km,kmDay:days>0?km/days:NaN,month:days>0?M/days*30:NaN}}
   return {rows,s,spent:sum(rows,r=>r.money),liters:sum(rows,r=>r.liters)};
 }
 // A reminder is due by km, by months, or by whichever comes first when it has both.
@@ -869,13 +851,9 @@ function render(){
   const mtKm=mtPerKm(current,s);
   // both cards: fuel on top, the same figure with maintenance underneath
   const mtSpent=sum(services.filter(x=>x.car===current&&inPeriod(x.date)),svTotal),l2=(l,v)=>`<span class="l2"><span>${l}</span><b><span class="n">${v}</span> <small>ج</small></b></span>`;
-  const big=[['تكلفة الكيلو',s?fmt(s.epk,2):'—','جنيه',l2('مع الصيانة',s&&mtKm?fmt(s.epk+mtKm,2):'—')],['اتصرف بنزين',fmt(spent,0),'جنيه',l2('وصيانة',fmt(mtSpent,0))]],mOk=s&&s.days>=MIN_MONTH_DAYS,
-    // the strip measures one stretch (first → last full tank), so liters match the gauge and per-month matches its own km
-    small=[['km','مشيت',s?fmt(s.km,0):'—','كم'],['L','استهلكت',s?fmt(s.L,1):'—','لتر'],['day','يوميًا',s?fmt(s.kmDay,0):'—','كم/يوم'],
-      ['mo','بنزين شهريًا',mOk?fmt(s.month,0):'—',s&&!mOk?'أقل من 14 يوم':'ج/شهر']];
+  const big=[['تكلفة الكيلو',s?fmt(s.epk,2):'—','جنيه',l2('مع الصيانة',s&&mtKm?fmt(s.epk+mtKm,2):'—')],['اتصرف بنزين',fmt(spent,0),'جنيه',l2('وصيانة',fmt(mtSpent,0))]],small=[['المسافة',s?fmt(s.km,0):'—','كم'],['اللترات',fmt(liters,1),'لتر'],['يوميًا',s?fmt(s.kmDay,0):'—','كم'],['في الشهر',s?fmt(s.month,0):'—','جنيه']];
   $('stats').innerHTML=big.map(([l,v,u,x])=>`<div class="stat big"><span class="l">${l}</span><span class="v"><span class="n">${v}</span><small>${u}</small></span>${x||''}</div>`).join('')
-    +`<div class="mini4">${small.map(([k,l,v,u])=>`<button type="button" data-info="${k}"><span class="l"><span>${l}</span><i class="ii" aria-hidden="true">i</i></span><span class="v n">${v}</span><small>${u}</small></button>`).join('')}</div>`
-    +(s?`<div class="pline"><span>من</span> <span>${niceY(s.from)}</span> <span>لـ</span> <span>${niceY(s.to)}</span> · <b class="n">${Math.round(s.days)}</b> <span>${dayW(Math.round(s.days))}</span> · <span>${rows.length} تفويلة</span></div>`:'');
+    +`<div class="mini4">${small.map(([l,v,u])=>`<div><span class="l">${l}</span><span class="v n">${v}</span><small>${u}</small></div>`).join('')}</div>`;
 
   // masthead line + this car's good/average/high zones around the gauge
   const cf=fillsOf(current),lf=cf.length?cf.reduce((a,b)=>a.date>b.date?a:b):null,dd=lf?Math.round((new Date(today())-new Date(lf.date))/DAY):null;
@@ -1295,30 +1273,6 @@ function renderSettings(){
   const a=backupAge();
   $('bkNote').innerHTML=(a===null?'لسه ما خدتش نسخة احتياطية. ':`آخر نسخة: ${nice(iso(meta.lastBackup))} (${a?`من <span class="n">${a}</span> ${dayW(a)}`:'النهارده'}). `)+'بياناتك متخزنة على الموبايل ده بس، فاحفظ النسخة في Drive أو واتساب.';
 }
-// what each number in the strip means, worked out with this period's own numbers
-function openInfo(k){
-  const {s,spent,liters}=stats(current),D=s?Math.round(s.days):0,
-    row=(l,v,u)=>`<div><span>${l}</span><b><span class="n">${v}</span>${u?` <small>${u}</small>`:''}</b></div>`,
-    tot=(f,v,u)=>`<div class="t"><span class="n">${f}</span><b><span class="n">${v}</span> <small>${u}</small></b></div>`,
-    calc=h=>`<div class="icalc">${h}</div>`,note=t=>`<p class="ifn">${t}</p>`;
-  const I={
-    km:['مشيت','الكيلومترات اللي العربية مشيتها من أول تفويلة فُل لآخر تفويلة فُل في الفترة، من فرق العداد.',
-      ()=>calc(row('عداد أول فُل',fmt(s.odoFrom,0),'كم')+row('عداد آخر فُل',fmt(s.odoTo,0),'كم')+tot(`${fmt(s.odoTo,0)} − ${fmt(s.odoFrom,0)}`,fmt(s.km,0),'كم'))],
-    L:['استهلكت','البنزين اللي اتحرق في المسافة دي. أول تفويلة فُل مش داخلة، لأن بنزينها اتصرف قبل الفترة.',
-      ()=>calc(row('مشيت',fmt(s.km,0),'كم')+row('استهلكت',fmt(s.L,1),'لتر')+tot(`${fmt(s.L,1)} ÷ ${fmt(s.km,0)} × 100`,fmt(s.l100),'لتر/100 كم'))
-        +(Math.abs(liters-s.L)>=0.05?calc(row('كل اللي فوّلته في الفترة',fmt(liters,1),'لتر'))+note('الرقم ده فيه تفويلة البداية كمان، علشان كده مختلف.'):'')],
-    day:['يوميًا','متوسط اللي العربية بتمشيه في اليوم.',
-      ()=>calc(row('مشيت',fmt(s.km,0),'كم')+row('في',D,dayW(D))+tot(`${fmt(s.km,0)} ÷ ${D}`,fmt(s.kmDay,0),'كم/يوم'))],
-    mo:['بنزين شهريًا','متوسط صرفك على البنزين لو الشهر 30 يوم. الصيانة مش داخلة.',
-      ()=>s.days<MIN_MONTH_DAYS?note('الفترة أقل من 14 يوم، فالتوقع الشهري مش هيبقى دقيق. اختار فترة أطول.')
-        :calc(row('صرفت على المسافة',fmt(s.M,0),'ج')+row('في',D,dayW(D))+tot(`${fmt(s.M,0)} ÷ ${D} × 30`,fmt(s.month,0),'ج'))
-        +(Math.abs(spent-s.M)>=0.5?calc(row('اتصرف بنزين (كل التفويلات)',fmt(spent,0),'ج'))+note('«اتصرف بنزين» فيه كل اللي دفعته في الفترة، ومنه تفويلة البداية، علشان كده مختلف.'):'')]
-  },[t,d,body]=I[k];
-  $('ifh').textContent=t;
-  $('ifBody').innerHTML=`<p class="ifp">${d}</p>`+(s?body():note('مفيش تفويلتين فُل في الفترة دي، فمفيش بيانات كفاية للحساب.'));
-  openS('infoSheet');
-}
-$('stats').addEventListener('click',e=>{const b=e.target.closest('[data-info]');if(b)openInfo(b.dataset.info)});
 function openSettings(){renderSettings();openS('setSheet')}
 $('themeSeg').onclick=e=>{const b=e.target.closest('[data-t]');if(b)applyTheme(b.dataset.t)};
 $('langSeg').onclick=e=>{const b=e.target.closest('[data-l]');if(b&&b.dataset.l!==LANG){ls('lang',b.dataset.l);location.reload()}};
@@ -1791,18 +1745,7 @@ const EN={
   'تحت':'Under','لـ':'to','فوق':'Over','يعني':'i.e.','كم لكل لتر':'km per liter','سعر اللتر دلوقتي:':'Price per liter now:','جنيه':'EGP','ج':'EGP','تعديل':'Edit','حفظ':'Save',
   'السعر الجديد هيتطبق على التفويلات الجاية بس، والقديمة بتفضل بسعرها.':'The new price applies to future fill-ups only; old ones keep their price.',
   'آخر عداد':'Odometer','آخر تفويلة':'Last fill-up','النهارده':'today','امبارح':'yesterday',
-  'تكلفة الكيلو':'Cost per km','اتصرف':'Spent','المسافة':'Distance','اللترات':'Liters','يوميًا':'Daily','في الشهر':'Per month',
-  'مشيت':'Driven','استهلكت':'Fuel used','بنزين شهريًا':'Fuel / month','ج/شهر':'EGP/month','أقل من 14 يوم':'needs 14+ days',
-  'الكيلومترات اللي العربية مشيتها من أول تفويلة فُل لآخر تفويلة فُل في الفترة، من فرق العداد.':'Kilometres driven from the first to the last full tank in the period, from the odometer readings.',
-  'عداد أول فُل':'First full tank odometer','عداد آخر فُل':'Last full tank odometer',
-  'البنزين اللي اتحرق في المسافة دي. أول تفويلة فُل مش داخلة، لأن بنزينها اتصرف قبل الفترة.':'Fuel burned over this distance. The first full tank is not counted, since that fuel was used before the period.',
-  'كل اللي فوّلته في الفترة':'Everything you filled in the period','الرقم ده فيه تفويلة البداية كمان، علشان كده مختلف.':'That one also includes the starting fill-up, so it differs.',
-  'متوسط اللي العربية بتمشيه في اليوم.':'How far the car goes per day on average.','في':'Over',
-  'متوسط صرفك على البنزين لو الشهر 30 يوم. الصيانة مش داخلة.':'Your average fuel spend for a 30-day month. Maintenance is not included.',
-  'الفترة أقل من 14 يوم، فالتوقع الشهري مش هيبقى دقيق. اختار فترة أطول.':'The period is under 14 days, so a monthly estimate would not be reliable. Pick a longer period.',
-  'صرفت على المسافة':'Spent over this distance','اتصرف بنزين (كل التفويلات)':'Fuel spent (all fill-ups)',
-  '«اتصرف بنزين» فيه كل اللي دفعته في الفترة، ومنه تفويلة البداية، علشان كده مختلف.':'"Fuel spent" counts everything you paid in the period, including the starting fill-up, so it differs.',
-  'مفيش تفويلتين فُل في الفترة دي، فمفيش بيانات كفاية للحساب.':'There are not two full tanks in this period, so there is not enough data.','كم':'km','لتر':'L',
+  'تكلفة الكيلو':'Cost per km','اتصرف':'Spent','المسافة':'Distance','اللترات':'Liters','يوميًا':'Per day','في الشهر':'Per month','كم':'km','لتر':'L',
   'استهلاك كل تفويلة':'Consumption per fill-up','دوس على أي عمود':'Tap any bar','مفيش تفويلات كفاية في الفترة دي.':'Not enough fill-ups in this period.','المتوسط':'Avg',
   'مسافة':'Distance','لترات':'Liters','كم/لتر':'km/L','مصروف البنزين الشهري':'Monthly fuel spend','مصروف العربية الشهري':'Monthly car spend','بنزين':'Fuel','مع الصيانة':'+ service','اتصرف بنزين':'Spent on fuel','وصيانة':'Service','فلوس الصيانة راحت فين':'Where the maintenance money went','الفرامل':'Brakes','زيت وفلاتر':'Oil & filters','الإشعال والحقن':'Ignition & injection','الموتور والتبريد':'Engine & cooling','العفشة والدركسيون':'Suspension & steering','الكاوتش والعجل':'Tires & wheels','التكييف':'A/C','الكهربا والإضاءة':'Electrics & lights','الصالون والبودي':'Interior & body','حاجات تانية':'Other','و':'and','تاني':'more','ج/شهر':'EGP/month','دوس على أي شهر عشان تشوف أرقامه بس.':'Tap a month to see only its numbers.',
   // alerts
