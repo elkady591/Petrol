@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Petrol">
-<script>var LANG='ar';try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;var pl=localStorage.getItem('pal');if(pl&&pl!=='petrol')document.documentElement.dataset.pal=pl;if(localStorage.getItem('lang')==='en'){LANG='en';document.documentElement.lang='en';document.documentElement.dir='ltr'}}catch(_){}</script>
+<script>var LANG='ar';try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;var sy=localStorage.getItem('sty');if(sy&&sy!=='base')document.documentElement.dataset.sty=sy;var pl=localStorage.getItem('pal');if(pl&&pl!=='petrol')document.documentElement.dataset.pal=pl;if(localStorage.getItem('lang')==='en'){LANG='en';document.documentElement.lang='en';document.documentElement.dir='ltr'}}catch(_){}</script>
 <style>html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap">
@@ -51,6 +51,7 @@
 :root[data-pal="graphite"]{--petrol:#2D3540;--petrol-deep:#2D3540;--accent:#D8841A}
 :root[data-pal="graphite"][data-theme="dark"]{--petrol:#4A5563;--accent:#F0A23A}
 @media (prefers-color-scheme:dark){:root[data-pal="graphite"]:not([data-theme="light"]){--petrol:#4A5563;--accent:#F0A23A}}
+#stySeg button{padding-inline:2px;font-size:12.5px}
 .pals{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
 .pals button{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:8px 2px 6px;display:grid;justify-items:center;gap:5px;font:inherit;font-size:11.5px;color:var(--muted);min-width:0}
 .pals i{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--c) 0 58%,var(--a) 58%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
@@ -412,6 +413,82 @@ html{padding-top:0}
 .stat.big .v{font-size:28px}
 .stat.sm{align-content:start}
 .stat.sm .v{font-size:22px}
+
+/* ===== designs (picked in settings, html[data-sty]); the default has no attribute ===== */
+/* soft: big rounded corners, shadows instead of borders, floating header and tab bar */
+:root[data-sty="soft"]{--r:26px}
+:root[data-sty="soft"] body{background:color-mix(in srgb,var(--petrol) 6%,var(--bg))}
+:root[data-sty="soft"] :is(.card,.stat,.tli,.fill,.mt,.banner,.crow,.acts button){border-color:transparent;box-shadow:0 6px 18px rgba(20,32,42,.08)}
+:root[data-sty="soft"] :is(.stat,.fill,.mt,.crow,.banner){border-radius:20px}
+:root[data-sty="soft"] .tli{border-radius:24px}
+:root[data-sty="soft"] .tli.next{border:0;box-shadow:none;background:color-mix(in srgb,var(--accent) 10%,transparent)}
+:root[data-sty="soft"] .tli .dot{border-color:color-mix(in srgb,var(--petrol) 6%,var(--bg))}
+:root[data-sty="soft"] .tlr:before{width:10px;inset-inline-start:15px;background:color-mix(in srgb,var(--petrol) 22%,var(--bg))}
+:root[data-sty="soft"] .tlr:after{display:none}
+:root[data-sty="soft"] .mast{margin:8px -10px 0;padding-inline:12px;border-radius:28px;box-shadow:0 14px 30px color-mix(in srgb,var(--petrol) 32%,transparent)}
+:root[data-sty="soft"] :is(.tlsum>button,.chip,.seg,.btn,input,textarea,.iconbtn,.fab){border-radius:18px}
+:root[data-sty="soft"] .seg button{border-radius:14px}
+:root[data-sty="soft"] .tnav{inset-inline:10px;bottom:10px;border:0;border-radius:26px;box-shadow:0 8px 24px rgba(20,32,42,.14);padding-bottom:8px}
+:root[data-sty="soft"] .dock{inset-inline:10px;bottom:10px;border:0;border-radius:24px;box-shadow:0 8px 24px rgba(20,32,42,.14)}
+:root[data-sty="soft"] .sheet{border-radius:30px 30px 0 0}
+
+/* glass: the page is one gradient and every card is frosted glass on it */
+:root[data-sty="glass"] body{background:linear-gradient(170deg,var(--petrol) 0%,color-mix(in srgb,var(--petrol) 60%,var(--accent)) 60%,var(--accent) 130%) fixed;min-height:100vh}
+:root[data-sty="glass"] .app{--panel:rgba(255,255,255,.14);--soft:rgba(255,255,255,.1);--line:rgba(255,255,255,.26);--ink:#fff;--muted:rgba(255,255,255,.78);--track:rgba(255,255,255,.2);--bg:transparent;
+  --good:#A6EEC2;--warn:#F6D684;--bad:#FFB0A6;color:var(--ink)}
+:root[data-sty="glass"] .mast{background:transparent}
+:root[data-sty="glass"] :is(.card,.stat,.tli,.fill,.banner,.crow){backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+:root[data-sty="glass"] .tli.next{background:rgba(255,255,255,.07)}
+:root[data-sty="glass"] .tlr:before{background:rgba(255,255,255,.3)}
+:root[data-sty="glass"] .tli .dot{border-color:transparent}
+:root[data-sty="glass"] :is(.tnav,.dock){background:rgba(255,255,255,.18);border:0;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+:root[data-sty="glass"] .tnav button{color:rgba(255,255,255,.8)}
+:root[data-sty="glass"] .tnav button.on{color:#fff}
+:root[data-sty="glass"] .tnav button.on span{background:rgba(255,255,255,.2)}
+
+/* bold: thick outlines, hard shadows, square corners */
+:root[data-sty="bold"]{--r:6px}
+:root[data-sty="bold"] :is(.card,.stat,.tli,.fill,.mt,.crow,.banner,.acts button){border:2px solid var(--ink);border-radius:6px;box-shadow:4px 4px 0 var(--ink)}
+:root[data-sty="bold"] .banner{border-inline-start-width:6px}
+:root[data-sty="bold"] .tli.next{box-shadow:none}
+:root[data-sty="bold"] .tli .r1 .m,:root[data-sty="bold"] .stat .v,:root[data-sty="bold"] .tlsum b{font-family:var(--f-display)}
+:root[data-sty="bold"] .tag{border-radius:4px;border:1.5px solid var(--ink);color:var(--ink);background:var(--panel)}
+:root[data-sty="bold"] .tlr:before{background:var(--ink);border-radius:0}
+:root[data-sty="bold"] .tli .dot{border-radius:6px;border:2px solid var(--ink)}
+:root[data-sty="bold"] .mast{border-radius:0;border-bottom:4px solid var(--ink)}
+:root[data-sty="bold"] :is(.tlsum>button,.chip){border-radius:6px;border:2px solid rgba(255,255,255,.55)}
+:root[data-sty="bold"] .tlsum>button.tot{background:var(--accent);color:var(--accent-ink);border-color:var(--ink)}
+:root[data-sty="bold"] :is(.btn,.seg,.seg button,input,textarea,.iconbtn,.periods button){border-radius:6px}
+:root[data-sty="bold"] :is(.btn,.fab){border:2px solid var(--ink)}
+:root[data-sty="bold"] .tnav{border-top:3px solid var(--ink)}
+:root[data-sty="bold"] .tnav .tfab{border-radius:14px;border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+:root[data-sty="bold"] .sheet{border-radius:10px 10px 0 0;border-top:3px solid var(--ink)}
+
+/* compact: the same look, tighter, so more fits on the screen */
+:root[data-sty="compact"] body{font-size:14px}
+:root[data-sty="compact"] .app{gap:10px}
+:root[data-sty="compact"] .card{padding:12px}
+:root[data-sty="compact"] .stat{padding:9px 11px}
+:root[data-sty="compact"] .stat.big .v{font-size:24px}
+:root[data-sty="compact"] .mast{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:12px}
+:root[data-sty="compact"] .tlhead{gap:8px}
+:root[data-sty="compact"] .tlsum{gap:5px}
+:root[data-sty="compact"] .tlsum>button{padding:5px 8px;border-radius:9px}
+:root[data-sty="compact"] .tlsum b{font-size:15px}
+:root[data-sty="compact"] .chip{padding:4px 10px}
+:root[data-sty="compact"] .chip .lg{width:30px;height:30px}
+:root[data-sty="compact"] .tlr{padding-inline-start:42px}
+:root[data-sty="compact"] .tlr:before{inset-inline-start:13px;width:5px}
+:root[data-sty="compact"] .tlr:after{inset-inline-start:15px}
+:root[data-sty="compact"] .tli{padding:7px 10px;margin-bottom:6px;border-radius:11px}
+:root[data-sty="compact"] .tli .dot{width:30px;height:30px;inset-inline-start:-42px;top:6px}
+:root[data-sty="compact"] .tli .dot svg{width:15px;height:15px}
+:root[data-sty="compact"] .tli .tags{margin-top:4px}
+:root[data-sty="compact"] .tag{font-size:11px;padding:0 7px}
+:root[data-sty="compact"] .mon{margin:8px 0 4px}
+:root[data-sty="compact"] .fill>button{padding:8px 11px}
+:root[data-sty="compact"] .fills{gap:6px}
+:root[data-sty="compact"] .mt{padding:7px 10px}
 </style>
 </head>
 <body>
@@ -596,6 +673,8 @@ html{padding-top:0}
     <div class="seg mini" id="themeSeg" style="--cols:3"><button type="button" data-t="auto">زي الموبايل</button><button type="button" data-t="light">فاتح</button><button type="button" data-t="dark">داكن</button></div>
     <h4 style="margin-top:14px">الألوان</h4>
     <div class="pals" id="palSeg"></div>
+    <h4 style="margin-top:14px">التصميم</h4>
+    <div class="seg mini" id="stySeg" style="--cols:5"><button type="button" data-sty="base">الأساسي</button><button type="button" data-sty="soft">ناعم</button><button type="button" data-sty="glass">زجاجي</button><button type="button" data-sty="bold">عريض</button><button type="button" data-sty="compact">مضغوط</button></div>
     <h4 style="margin-top:14px">شكل التطبيق</h4>
     <div class="seg mini" id="laySeg" style="--cols:2"><button type="button" data-lay="classic">الأساسي</button><button type="button" data-lay="tl">الخط الزمني</button></div>
     <h4 style="margin-top:14px">اللغة · Language</h4>
@@ -1287,6 +1366,9 @@ $('fillForm').onsubmit=e=>{
 
 // ---- settings ----
 const PALS=[['petrol','بترولي','#1E4C5C','#D8841A'],['navy','كحلي','#1F3F73','#E08A1E'],['green','أخضر','#1D5641','#D89B1A'],['purple','بنفسجي','#45367A','#E0785A'],['wine','نبيتي','#6A2232','#D8A11A'],['graphite','رمادي','#2D3540','#D8841A']];
+const STYLES=['base','soft','glass','bold','compact'];
+function styNow(){let v='base';try{v=localStorage.getItem('sty')||'base'}catch(_){}return STYLES.includes(v)?v:'base'}
+function applySty(v){ls('sty',v);if(v==='base')delete document.documentElement.dataset.sty;else document.documentElement.dataset.sty=v;renderSettings()}
 function palNow(){let p='petrol';try{p=localStorage.getItem('pal')||'petrol'}catch(_){}return PALS.some(x=>x[0]===p)?p:'petrol'}
 function applyPal(p){ls('pal',p);if(p==='petrol')delete document.documentElement.dataset.pal;else document.documentElement.dataset.pal=p;
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=PALS.find(x=>x[0]===p)[2];renderSettings()}
@@ -1294,6 +1376,7 @@ function themeNow(){let t='auto';try{t=localStorage.getItem('theme')||'auto'}cat
 function applyTheme(t){ls('theme',t);if(t==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;renderSettings()}
 function renderSettings(){
   const t=themeNow();$('themeSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
+  const sy=styNow();$('stySeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sty===sy));
   const pl=palNow();$('palSeg').innerHTML=PALS.map(([k,n,c,a])=>`<button type="button" data-pal="${k}" aria-pressed="${k===pl}"><i style="--c:${c};--a:${a}"></i><span>${n}</span></button>`).join('');
   $('carList').innerHTML=cars.map(c=>`<button class="crow" type="button" data-car="${esc(c.id)}"><span><b>${brandIcon(c.name)}${esc(c.name)}</b><span>سعر اللتر <span class="n">${fmt(c.price,2)}</span> · كويس تحت <span class="n">${fmt(c.good,1)}</span> · عالي من <span class="n">${fmt(c.bad,1)}</span></span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>`).join('');
   $('cmpSec').hidden=cars.length<2;renderSync();
@@ -1303,6 +1386,7 @@ function renderSettings(){
   $('bkNote').innerHTML=(a===null?'لسه ما خدتش نسخة احتياطية. ':`آخر نسخة: ${nice(iso(meta.lastBackup))} (${a?`من <span class="n">${a}</span> ${dayW(a)}`:'النهارده'}). `)+'بياناتك متخزنة على الموبايل ده بس، فاحفظ النسخة في Drive أو واتساب.';
 }
 function openSettings(){renderSettings();openS('setSheet')}
+$('stySeg').onclick=e=>{const b=e.target.closest('[data-sty]');if(b)applySty(b.dataset.sty)};
 $('palSeg').onclick=e=>{const b=e.target.closest('[data-pal]');if(b)applyPal(b.dataset.pal)};
 $('themeSeg').onclick=e=>{const b=e.target.closest('[data-t]');if(b)applyTheme(b.dataset.t)};
 $('langSeg').onclick=e=>{const b=e.target.closest('[data-l]');if(b&&b.dataset.l!==LANG){ls('lang',b.dataset.l);location.reload()}};
@@ -1775,7 +1859,7 @@ const EN={
   'تحت':'Under','لـ':'to','فوق':'Over','يعني':'i.e.','كم لكل لتر':'km per liter','سعر اللتر دلوقتي:':'Price per liter now:','جنيه':'EGP','ج':'EGP','تعديل':'Edit','حفظ':'Save',
   'السعر الجديد هيتطبق على التفويلات الجاية بس، والقديمة بتفضل بسعرها.':'The new price applies to future fill-ups only; old ones keep their price.',
   'آخر عداد':'Odometer','آخر تفويلة':'Last fill-up','النهارده':'today','امبارح':'yesterday',
-  'تكلفة الكيلو':'Cost per km','اتصرف':'Spent','المسافة':'Distance','اللترات':'Liters','يوميًا':'Per day','متوسط اليوم':'Avg per day','الألوان':'Colours','بترولي':'Petrol','كحلي':'Navy','أخضر':'Green','بنفسجي':'Purple','نبيتي':'Wine','رمادي':'Graphite','إجمالي تكلفة الكيلو':'Total cost per km','بنزين للكيلو':'Fuel per km','صيانة للكيلو':'Maintenance per km','اتصرف إجمالي':'Total spent','التفويلات':'Fill-ups','متوسط تكلفة الكيلو':'Avg cost per km','متوسط بنزين الشهر':'Avg fuel / month','متوسط الشهر':'Avg per month','في الشهر':'Per month','كم':'km','لتر':'L',
+  'تكلفة الكيلو':'Cost per km','اتصرف':'Spent','المسافة':'Distance','اللترات':'Liters','يوميًا':'Per day','متوسط اليوم':'Avg per day','الألوان':'Colours','التصميم':'Design','ناعم':'Soft','زجاجي':'Glass','عريض':'Bold','مضغوط':'Compact','بترولي':'Petrol','كحلي':'Navy','أخضر':'Green','بنفسجي':'Purple','نبيتي':'Wine','رمادي':'Graphite','إجمالي تكلفة الكيلو':'Total cost per km','بنزين للكيلو':'Fuel per km','صيانة للكيلو':'Maintenance per km','اتصرف إجمالي':'Total spent','التفويلات':'Fill-ups','متوسط تكلفة الكيلو':'Avg cost per km','متوسط بنزين الشهر':'Avg fuel / month','متوسط الشهر':'Avg per month','في الشهر':'Per month','كم':'km','لتر':'L',
   'استهلاك كل تفويلة':'Consumption per fill-up','دوس على أي عمود':'Tap any bar','مفيش تفويلات كفاية في الفترة دي.':'Not enough fill-ups in this period.','المتوسط':'Avg',
   'مسافة':'Distance','لترات':'Liters','كم/لتر':'km/L','مصروف البنزين الشهري':'Monthly fuel spend','مصروف العربية الشهري':'Monthly car spend','بنزين':'Fuel','مع الصيانة':'+ service','اتصرف بنزين':'Spent on fuel','وصيانة':'Service','فلوس الصيانة راحت فين':'Where the maintenance money went','الفرامل':'Brakes','زيت وفلاتر':'Oil & filters','الإشعال والحقن':'Ignition & injection','الموتور والتبريد':'Engine & cooling','العفشة والدركسيون':'Suspension & steering','الكاوتش والعجل':'Tires & wheels','التكييف':'A/C','الكهربا والإضاءة':'Electrics & lights','الصالون والبودي':'Interior & body','حاجات تانية':'Other','و':'and','تاني':'more','ج/شهر':'EGP/month','دوس على أي شهر عشان تشوف أرقامه بس.':'Tap a month to see only its numbers.',
   // alerts
