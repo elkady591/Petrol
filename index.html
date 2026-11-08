@@ -855,7 +855,7 @@ function render(){
   const mtSpent=sum(services.filter(x=>x.car===current&&inPeriod(x.date)),svTotal),l2=(l,v)=>`<span class="l2"><span>${l}</span><b><span class="n">${v}</span> <small>ج</small></b></span>`;
   const big=[['تكلفة الكيلو',s?fmt(s.epk,2):'—','جنيه',l2('مع الصيانة',s&&mtKm?fmt(s.epk+mtKm,2):'—')],['اتصرف بنزين',fmt(spent,0),'جنيه',l2('وصيانة',fmt(mtSpent,0))]],small=[['المسافة',s?fmt(s.km,0):'—','كم'],['اللترات',fmt(liters,1),'لتر'],['متوسط اليوم',s?fmt(s.kmDay,0):'—','كم',`<span class="s2"><span>متوسط الشهر</span><b><span class="n">${s?fmt(s.kmDay*30,0):'—'}</span> <small>كم</small></b></span>`],['في الشهر',s?fmt(s.month,0):'—','جنيه']];
   $('stats').innerHTML=big.map(([l,v,u,x])=>`<div class="stat big"><span class="l">${l}</span><span class="v"><span class="n">${v}</span><small>${u}</small></span>${x||''}</div>`).join('')
-    +`<div class="mini4">${small.map(([l,v,u,x])=>`<div><span class="l">${l}</span>${x?`<span class="v"><span class="n">${v}</span> <small>${u}</small></span>${x}`:`<span class="v n">${v}</span><small>${u}</small>`}</div>`).join('')}</div>`;
+    +`<div class="mini4">${small.map(([l,v,u,x])=>`<div><span class="l">${l}</span><span class="v"><span class="n">${v}</span> <small>${u}</small></span>${x||''}</div>`).join('')}</div>`;
 
   // masthead line + this car's good/average/high zones around the gauge
   const cf=fillsOf(current),lf=cf.length?cf.reduce((a,b)=>a.date>b.date?a:b):null,dd=lf?Math.round((new Date(today())-new Date(lf.date))/DAY):null;
