@@ -131,6 +131,7 @@ h1{font-family:var(--f-display);font-weight:700;font-size:22px;margin:0}
 /* compare */
 .cmp{display:grid;font-size:14px}
 .cmp>div{padding:9px 4px;border-bottom:1px solid var(--line);text-align:center;min-width:0}
+.cmp .rl.sub{padding-inline-start:14px;font-size:12px}
 .cmp .rl{text-align:start;color:var(--muted);font-size:12.5px}
 .cmp .hd{font-weight:600;font-size:12.5px;overflow-wrap:anywhere;line-height:1.3}
 .cmp .best{color:var(--good);font-weight:700}
@@ -964,13 +965,13 @@ function renderCompare(){
   $('cmpQuick').innerHTML=quickRanges().map(([l,f,t],i)=>`<button type="button" data-q="${i}" aria-pressed="${f===cmpFrom&&t===cmpTo}">${l}</button>`).join('');
   $('cmpFrom').value=cmpFrom;$('cmpTo').value=cmpTo;
   const inR=d=>(!cmpFrom||d>=cmpFrom)&&(!cmpTo||d<=cmpTo);
-  const data=cars.map(c=>{const st=stats(c.id,inR),mt=sum(services.filter(s=>s.car===c.id&&inR(s.date)),svTotal);return {c,...st,mt,all:st.spent+mt}});
-  const rows=[['لتر/100 كم',d=>d.s&&d.s.l100,1,-1],['كم/لتر',d=>d.s&&d.s.kml,1,1],['تكلفة الكيلو',d=>d.s&&d.s.epk,2,-1],['المسافة (كم)',d=>d.s&&d.s.km,0,0],['بنزين (ج)',d=>d.spent,0,0],['صيانة (ج)',d=>d.mt,0,0],['الإجمالي (ج)',d=>d.all,0,0],['بنزين في الشهر (ج)',d=>d.s&&d.s.month,0,0]];
+  const data=cars.map(c=>{const st=stats(c.id,inR),mt=sum(services.filter(s=>s.car===c.id&&inR(s.date)),svTotal);return {c,...st,mt,all:st.spent+mt,mk:st.s?mtPerKm(c.id,st.s):NaN}});
+  const rows=[['لتر/100 كم',d=>d.s&&d.s.l100,1,-1],['كم/لتر',d=>d.s&&d.s.kml,1,1],['إجمالي تكلفة الكيلو',d=>d.s&&d.s.epk+d.mk,2,-1],['بنزين للكيلو',d=>d.s&&d.s.epk,2,-1,1],['صيانة للكيلو',d=>d.mk,2,-1,1],['المسافة (كم)',d=>d.s&&d.s.km,0,0],['بنزين (ج)',d=>d.spent,0,0],['صيانة (ج)',d=>d.mt,0,0],['الإجمالي (ج)',d=>d.all,0,0],['بنزين في الشهر (ج)',d=>d.s&&d.s.month,0,0]];
   $('cmp').style.gridTemplateColumns=`minmax(0,1.15fr) repeat(${cars.length},minmax(0,1fr))`;
   let h='<div class="rl"></div>'+data.map(d=>`<div class="hd">${esc(d.c.name)}</div>`).join('');
-  rows.forEach(([l,f,dg,dir],i)=>{const vs=data.map(d=>{const v=f(d);return Number.isFinite(v)?v:NaN}),ok=vs.filter(Number.isFinite);
+  rows.forEach(([l,f,dg,dir,sub],i)=>{const vs=data.map(d=>{const v=f(d);return Number.isFinite(v)?v:NaN}),ok=vs.filter(Number.isFinite);
     const best=dir&&ok.length>1?(dir<0?Math.min(...ok):Math.max(...ok)):null,last=i===rows.length-1?' style="border:0"':'';
-    h+=`<div class="rl"${last}>${l}</div>`+vs.map(v=>`<div class="${best!==null&&v===best?'best':''}"${last}><span class="n">${fmt(v,dg)}</span></div>`).join('')});
+    h+=`<div class="rl${sub?' sub':''}"${last}>${l}</div>`+vs.map(v=>`<div class="${best!==null&&v===best?'best':''}"${last}><span class="n">${fmt(v,dg)}</span></div>`).join('')});
   $('cmp').innerHTML=h;
 }
 
@@ -1745,7 +1746,7 @@ const EN={
   'تحت':'Under','لـ':'to','فوق':'Over','يعني':'i.e.','كم لكل لتر':'km per liter','سعر اللتر دلوقتي:':'Price per liter now:','جنيه':'EGP','ج':'EGP','تعديل':'Edit','حفظ':'Save',
   'السعر الجديد هيتطبق على التفويلات الجاية بس، والقديمة بتفضل بسعرها.':'The new price applies to future fill-ups only; old ones keep their price.',
   'آخر عداد':'Odometer','آخر تفويلة':'Last fill-up','النهارده':'today','امبارح':'yesterday',
-  'تكلفة الكيلو':'Cost per km','اتصرف':'Spent','المسافة':'Distance','اللترات':'Liters','يوميًا':'Per day','متوسط اليوم':'Avg per day','إجمالي تكلفة الكيلو':'Total cost per km','اتصرف إجمالي':'Total spent','التفويلات':'Fill-ups','متوسط تكلفة الكيلو':'Avg cost per km','متوسط بنزين الشهر':'Avg fuel / month','متوسط الشهر':'Avg per month','في الشهر':'Per month','كم':'km','لتر':'L',
+  'تكلفة الكيلو':'Cost per km','اتصرف':'Spent','المسافة':'Distance','اللترات':'Liters','يوميًا':'Per day','متوسط اليوم':'Avg per day','إجمالي تكلفة الكيلو':'Total cost per km','بنزين للكيلو':'Fuel per km','صيانة للكيلو':'Maintenance per km','اتصرف إجمالي':'Total spent','التفويلات':'Fill-ups','متوسط تكلفة الكيلو':'Avg cost per km','متوسط بنزين الشهر':'Avg fuel / month','متوسط الشهر':'Avg per month','في الشهر':'Per month','كم':'km','لتر':'L',
   'استهلاك كل تفويلة':'Consumption per fill-up','دوس على أي عمود':'Tap any bar','مفيش تفويلات كفاية في الفترة دي.':'Not enough fill-ups in this period.','المتوسط':'Avg',
   'مسافة':'Distance','لترات':'Liters','كم/لتر':'km/L','مصروف البنزين الشهري':'Monthly fuel spend','مصروف العربية الشهري':'Monthly car spend','بنزين':'Fuel','مع الصيانة':'+ service','اتصرف بنزين':'Spent on fuel','وصيانة':'Service','فلوس الصيانة راحت فين':'Where the maintenance money went','الفرامل':'Brakes','زيت وفلاتر':'Oil & filters','الإشعال والحقن':'Ignition & injection','الموتور والتبريد':'Engine & cooling','العفشة والدركسيون':'Suspension & steering','الكاوتش والعجل':'Tires & wheels','التكييف':'A/C','الكهربا والإضاءة':'Electrics & lights','الصالون والبودي':'Interior & body','حاجات تانية':'Other','و':'and','تاني':'more','ج/شهر':'EGP/month','دوس على أي شهر عشان تشوف أرقامه بس.':'Tap a month to see only its numbers.',
   // alerts
