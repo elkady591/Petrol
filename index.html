@@ -412,6 +412,13 @@ html{padding-top:0}
 .stat.big{padding:14px 16px}
 .stat.big .v{font-size:28px}
 .stat.sm{align-content:start}
+/* cost per km: fuel and maintenance one under the other, same size */
+.halves{display:grid;margin-top:4px}
+.halves>div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;min-width:0;padding:6px 0}
+.halves>div+div{border-top:1px solid var(--line)}
+.halves .hl{font-size:13px;color:var(--muted)}
+.stat.big .halves .v{font-size:22px;gap:3px;white-space:nowrap}
+.halves .v small{font-size:11px}
 .stat.sm .v{font-size:22px}
 
 /* ===== designs (picked in settings, html[data-sty]); the default has no attribute ===== */
@@ -955,7 +962,9 @@ function render(){
   const allT=period==='all';
   const big=[[allT?'متوسط تكلفة الكيلو':'تكلفة الكيلو',s?fmt(s.epk,2):'—','جنيه',l2('مع الصيانة',s&&mtKm?fmt(s.epk+mtKm,2):'—')],['اتصرف إجمالي',fmt(spent+mtSpent,0),'جنيه',l2('بنزين',fmt(spent,0))+l2('صيانة',fmt(mtSpent,0)).replace('l2','l2 l3')]],ltr=['اللترات',fmt(liters,1),'لتر'],small=[['المسافة',s?fmt(s.km,0):'—','كم'],...(allT?[['متوسط اليوم',s?fmt(s.kmDay,0):'—','كم',l2('متوسط الشهر',s?fmt(s.kmDay*30,0):'—','كم')],ltr,['متوسط بنزين الشهر',s?fmt(s.month,0):'—','جنيه']]
       :[['يوميًا',s?fmt(s.kmDay,0):'—','كم'],ltr,['التفويلات',String(rows.length),'']])];
-  $('stats').innerHTML=big.map(([l,v,u,x])=>`<div class="stat big"><span class="l">${l}</span><span class="v"><span class="n">${v}</span><small>${u}</small></span>${x||''}</div>`).join('')
+  // cost per km: fuel and maintenance one under the other, same size (the total is in the header)
+  const half=(l,v)=>`<div><span class="hl">${l}</span><span class="v"><span class="n">${v}</span><small>ج</small></span></div>`;
+  $('stats').innerHTML=`<div class="stat big"><span class="l">${big[0][0]}</span><div class="halves">${half('بنزين',s?fmt(s.epk,2):'—')}${half('صيانة',s?fmt(mtKm,2):'—')}</div></div>`+big.slice(1).map(([l,v,u,x])=>`<div class="stat big"><span class="l">${l}</span><span class="v"><span class="n">${v}</span><small>${u}</small></span>${x||''}</div>`).join('')
     +small.map(([l,v,u,x])=>`<div class="stat sm"><span class="l">${l}</span><span class="v"><span class="n">${v}</span>${u?`<small>${u}</small>`:''}</span>${x||''}</div>`).join('');
 
   // masthead line + this car's good/average/high zones around the gauge
