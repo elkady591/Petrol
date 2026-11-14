@@ -266,6 +266,8 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .tli .nt{display:block;font-size:12px;color:var(--muted);margin-top:4px;white-space:pre-line}
 .tli.next{border-style:dashed;background:transparent}
 .tli.next .dot{background:var(--panel);border-color:var(--line);color:var(--accent)}
+.tli.odo{background:transparent;border-style:dashed;padding-block:8px}.tli.odo .r1 b{font-size:14px;font-weight:500;color:var(--muted)}.tli.odo .dot{width:29px;height:29px;inset-inline-start:-42px;top:7px;background:var(--muted)}.tli.odo .dot svg{width:15px;height:15px}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer}
 #tlMore{margin:4px 0 0}
 .tnav{position:fixed;inset-inline:0;bottom:0;z-index:5;background:var(--panel);border-top:1px solid var(--line);grid-template-columns:repeat(5,minmax(0,1fr));align-items:end;padding:6px 6px calc(8px + env(safe-area-inset-bottom,0px))}
 .lay-tl .tnav{display:grid}
@@ -278,10 +280,10 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .tnav span.badge:after{content:attr(data-n);position:absolute;top:-4px;inset-inline-end:8px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--bad);color:#fff;font-size:10.5px;font-weight:700;line-height:17px;text-align:center;font-family:var(--f-body)}
 .tnav .tfab{justify-self:center;width:58px;height:58px;border-radius:50%;background:var(--accent);color:var(--accent-ink);place-items:center;margin-top:-30px;box-shadow:0 6px 18px rgba(224,138,30,.4);border:4px solid var(--panel);padding:0}
 .tnav .tfab svg{width:26px;height:26px}
-.acts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-bottom:6px}
+.acts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding-bottom:6px}
 .acts button{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:18px 8px;font-weight:600;font-size:15px;color:var(--ink)}
 .acts i{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;margin:0 auto 8px;color:#fff}
-.acts i svg{width:26px;height:26px}.acts .af{background:var(--accent)}.acts .as{background:var(--petrol)}.acts .at{background:var(--good)}
+.acts i svg{width:26px;height:26px}.acts .af{background:var(--accent)}.acts .as{background:var(--petrol)}.acts .at{background:var(--good)}.acts .ao{background:var(--muted)}
 .nocar .tnav,.nocar .tlsum,.nocar #tlChip{display:none!important}
 .welcome{display:grid;gap:12px}
 .welcome h2{font-size:17px;margin:0}
@@ -617,6 +619,7 @@ html{padding-top:0}
   <button type="button" data-tab="todo"><span><svg><use href="#i-todo"/></svg></span>المهام</button>
 </nav>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-odo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 17a9 9 0 1 1 17 0"/><path d="m12 13 4-4"/><circle cx="12" cy="13" r="1.3"/></symbol>
   <symbol id="i-pump" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M3 21h13M7 7h5v4H7z"/><path d="M15 10h2a2 2 0 0 1 2 2v4a1.5 1.5 0 0 0 3 0V9l-3-3"/></symbol>
   <symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-2.5z"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
@@ -642,6 +645,7 @@ html{padding-top:0}
     <button type="button" id="addFill"><i class="af"><svg><use href="#i-pump"/></svg></i>تفويلة</button>
     <button type="button" id="addSvc"><i class="as"><svg><use href="#i-wrench"/></svg></i>صيانة</button>
     <button type="button" id="addTodo"><i class="at"><svg><use href="#i-todo"/></svg></i>مهمة</button>
+    <button type="button" id="addOdo"><i class="ao"><svg><use href="#i-odo"/></svg></i>العداد</button>
   </div>
 </div>
 
@@ -823,6 +827,20 @@ html{padding-top:0}
   </form>
 </div>
 
+<div class="sheet" id="odoSheet" role="dialog" aria-modal="true" aria-labelledby="osh">
+  <div class="grab"></div>
+  <h3 id="osh">قراءة عداد <span id="oshcar"></span></h3>
+  <form class="form" id="odoForm" novalidate>
+    <label>العداد (كم)<input type="number" id="oOdo" inputmode="numeric" min="0" step="1"></label>
+    <label>التاريخ<input type="date" id="oDate"></label>
+    <p class="hint full" id="oHint"></p>
+    <p class="hint full">القراءة بتحدّث آخر عداد ومواعيد الصيانة بس، وملهاش دعوة بالاستهلاك أو المصاريف. ولما تسجّل تفويلة أو صيانة بعدها، بتختفي من السجل لوحدها.</p>
+    <div class="err" id="oErr" hidden></div>
+    <button class="btn pri" type="submit">احفظ</button>
+    <button class="btn del" type="button" id="oDel">امسح القراءة</button>
+  </form>
+</div>
+
 <div class="sheet" id="mtSheet" role="dialog" aria-modal="true" aria-labelledby="msh">
   <div class="grab"></div>
   <h3 id="msh"><b id="mshT" style="font-weight:600">تذكير صيانة</b> <span id="mshcar"></span></h3>
@@ -884,7 +902,10 @@ const fillsOf=id=>fills.filter(f=>f.car===id).sort((a,b)=>a.odo-b.odo);
 const servicesOf=id=>services.filter(s=>s.car===id).sort((a,b)=>b.date.localeCompare(a.date)||b.odo-a.odo);
 const svTotal=s=>s.parts+s.labor;
 // latest known odometer reading, from fills or services
-const curOdo=id=>{const o=[...fillsOf(id).map(f=>f.odo),...servicesOf(id).map(s=>s.odo)].filter(v=>v>0);return o.length?Math.max(...o):NaN};
+const logOdo=id=>{const o=[...fillsOf(id).map(f=>f.odo),...servicesOf(id).map(s=>s.odo)].filter(v=>v>0);return o.length?Math.max(...o):NaN};
+// a reading typed in by hand ("update odometer") counts only while it's ahead of every fill-up and service
+const liveOdo=id=>{const c=cars.find(c=>c.id===id),r=c&&c.odoR,l=logOdo(id);return r&&!(r.odo<=l)?r:null};
+const curOdo=id=>{const r=liveOdo(id);return r?r.odo:logOdo(id)};
 function inPeriod(date){
   if(period==='all')return true;
   if(period==='30'){const d=new Date();d.setDate(d.getDate()-30);return date>=iso(d)}
@@ -1097,7 +1118,7 @@ function renderMaint(){
   const cur=curOdo(car.id),all=servicesOf(car.id);
   // reminders
   $('mtWrap').hidden=!car.maint.length;
-  $('mtodo').innerHTML=Number.isFinite(cur)?`آخر عداد <span class="n">${fmt(cur,0)}</span>`:'';
+  $('mtodo').innerHTML=`${Number.isFinite(cur)?`آخر عداد <span class="n">${fmt(cur,0)}</span> · `:''}<button class="linkbtn" type="button" id="odoBtn">حدّث العداد</button>`;
   // due first, then coming up, then the rest; the most overdue at the very top
   const rank={bad:0,warn:1,good:2},over=(m,s)=>Math.max(m.every>0&&Number.isFinite(s.km)?-s.km/m.every:-Infinity,m.months>0&&Number.isFinite(s.dd)?-s.dd/(m.months*30.44):-Infinity);
   const items=car.maint.map(m=>({m,s:mtState(m,cur)})).sort((a,b)=>rank[a.s.st]-rank[b.s.st]||over(b.m,b.s)-over(a.m,a.s)||b.s.used-a.s.used);
@@ -1232,7 +1253,7 @@ function applyLayout(){
   document.body.classList.toggle('lay-tl',layout==='tl');document.body.dataset.tab=tab;
   $('tnav').querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
 }
-const pumpSvg='<svg><use href="#i-pump"/></svg>',wrenchSvg='<svg><use href="#i-wrench"/></svg>';
+const odoSvg='<svg><use href="#i-odo"/></svg>',pumpSvg='<svg><use href="#i-pump"/></svg>',wrenchSvg='<svg><use href="#i-wrench"/></svg>';
 function carLogo(c){const b=brandIcon(c.name);return `<span class="lg">${b||`<span class="ini">${esc((c.name||'?').trim().charAt(0))}</span>`}</span>`}
 function renderTL(){
   if(layout!=='tl')return;
@@ -1253,7 +1274,7 @@ function renderTL(){
     <button type="button" data-per class="tot"><span>الإجمالي</span><b class="n">${fmt(fuel+mnt,0)}</b> <small>ج</small></button>`;
   // one road: fills (with their consumption) and services, grouped by month
   const ch=chain(fillsOf(car.id));
-  const items=[...ch.map(r=>({k:'f',date:r.date,odo:r.odo,r})),...servicesOf(car.id).map(s=>({k:'s',date:s.date,odo:s.odo,s}))]
+  const lo=liveOdo(car.id),items=[...ch.map(r=>({k:'f',date:r.date,odo:r.odo,r})),...servicesOf(car.id).map(s=>({k:'s',date:s.date,odo:s.odo,s})),...(lo?[{k:'o',date:lo.date||today(),odo:lo.odo}]:[])]
     .sort((a,b)=>b.date.localeCompare(a.date)||b.odo-a.odo);
   const months=[];items.forEach(it=>{const mk=it.date.slice(0,7),g=months.at(-1);if(g&&g.m===mk)g.items.push(it);else months.push({m:mk,items:[it]})});
   let h='';
@@ -1267,6 +1288,9 @@ function renderTL(){
     const fu=sum(g.items.filter(i=>i.k==='f'),i=>i.r.money),sv=sum(g.items.filter(i=>i.k==='s'),i=>svTotal(i.s));
     h+=`<div class="mon"><b>${monthName(g.m)}</b><span>بنزين <span class="n">${fmt(fu,0)}</span> · صيانة <span class="n">${fmt(sv,0)}</span></span></div><div class="tlr">`;
     g.items.forEach(i=>{
+      if(i.k==='o'){h+=`<button class="tli odo" type="button" data-eo="1"><span class="dot">${odoSvg}</span>
+          <span class="r1"><b>قراءة عداد · <span class="n">${fmt(i.odo,0)}</span> كم</b></span>
+          <span class="r2"><span>${niceY(i.date)}</span></span></button>`;return}
       if(i.k==='f'){const r=i.r,tags=[];
         tags.push(Number.isFinite(r.km)?`<span class="tag"><span class="n">${fmt(r.km,0)}</span> كم</span>`:'<span class="tag">أول قراءة</span>');
         if(r.seg){const b=band(r.l100,car)[0];tags.push(`<span class="tag ${b}"><span class="n">${fmt(r.l100)}</span> ل/100 · ${RATE[b]}</span>`,`<span class="tag"><span class="n">${fmt(r.epk,2)}</span> ج/كم</span>`)}
@@ -1286,6 +1310,7 @@ function renderTL(){
 $('tl').onclick=e=>{
   const f=e.target.closest('[data-ef]');if(f){openFill(f.dataset.ef);return}
   const s=e.target.closest('[data-es]');if(s){openSvc(s.dataset.es);return}
+  if(e.target.closest('[data-eo]')){openOdo();return}
   if(e.target.closest('#tlMore')){tlMonths+=6;renderTL()}
 };
 $('tnav').onclick=e=>{
@@ -1296,6 +1321,21 @@ $('tnav').onclick=e=>{
 };
 $('addFill').onclick=()=>openFill(null);
 $('addSvc').onclick=()=>openSvc(null);
+$('addOdo').onclick=()=>openOdo();
+function openOdo(){const car=curCar();if(!car){toast('اختار العربية الأول.');return}
+  const r=liveOdo(car.id),l=logOdo(car.id);$('oErr').hidden=true;$('oshcar').textContent=car.name;
+  $('oOdo').value=r?r.odo:'';$('oDate').value=r&&r.date?r.date:today();$('oDel').hidden=!r;
+  $('oHint').innerHTML=Number.isFinite(l)?`آخر عداد في السجل <span class="n">${fmt(l,0)}</span> كم`:'';$('oHint').hidden=!Number.isFinite(l);
+  openS('odoSheet');setTimeout(()=>$('oOdo').focus(),250)}
+$('mtodo').onclick=e=>{if(e.target.closest('#odoBtn'))openOdo()};
+$('odoForm').onsubmit=e=>{e.preventDefault();const car=curCar();if(!car)return;
+  const fail=t=>{$('oErr').textContent=t;$('oErr').hidden=false};
+  const odo=Math.round(Number($('oOdo').value)),date=$('oDate').value||today(),l=logOdo(car.id);
+  if(!(odo>0))return fail('اكتب قراءة العداد.');
+  if(date>today())return fail('التاريخ ده لسه ما جاش.');
+  if(odo<=l)return fail(`القراءة لازم تبقى أكبر من آخر عداد متسجّل (${fmt(l,0)} كم).`);
+  car.odoR={odo,date};car.u=Date.now();if(!save())return;closeS();render();toast('العداد اتحدّث')};
+$('oDel').onclick=()=>{const car=curCar();if(!car)return;car.odoR=null;car.u=Date.now();save();closeS();render();toast('اتمسحت')};
 $('tlSet').onclick=openSettings;
 $('tlSum').onclick=e=>{if(!e.target.closest('[data-per]'))return;
   $('perList').innerHTML=periodOptions().map(([k,l])=>`<button class="crow" type="button" data-pp="${k}"><b>${l}</b>${k===period?'<span style="color:var(--good);font-weight:700">✓</span>':''}</button>`).join('');
@@ -1680,7 +1720,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeS()});
 // ---- storage (data lives on this phone) ----
 // v1 data had one price per car and no full/partial flag: old fills take the car's price and count as full tanks.
 function normalize(d){
-  const cs=d.cars.map(c=>({id:String(c.id),name:String(c.name||'عربية'),price:Number(c.price)||0,order:Number(c.order)||0,good:Number(c.good)||9,bad:Number(c.bad)||12,u:Number(c.u)||0,prefs:c.prefs&&typeof c.prefs==='object'?c.prefs:{},
+  const cs=d.cars.map(c=>({id:String(c.id),name:String(c.name||'عربية'),price:Number(c.price)||0,order:Number(c.order)||0,good:Number(c.good)||9,bad:Number(c.bad)||12,u:Number(c.u)||0,prefs:c.prefs&&typeof c.prefs==='object'?c.prefs:{},odoR:c.odoR&&Number(c.odoR.odo)>0?{odo:Number(c.odoR.odo),date:String(c.odoR.date||'')}:null,
     maint:Array.isArray(c.maint)?c.maint.map(m=>({id:String(m.id),name:String(m.name),every:Number(m.every)||0,last:Number(m.last)||0,months:Number(m.months)||0,lastDate:m.lastDate?String(m.lastDate):''})).filter(m=>m.every>0||m.months>0):[]}));
   const fs=(Array.isArray(d.fills)?d.fills:[]).map(f=>{const c=cs.find(c=>c.id===f.car);if(!c)return null;
     return {id:String(f.id),car:c.id,date:String(f.date),odo:Number(f.odo),money:Number(f.money),price:Number(f.price)>0?Number(f.price):c.price,full:f.full!==false,u:Number(f.u)||0}}).filter(Boolean);
@@ -1865,6 +1905,9 @@ $('importFile').onchange=$('wImport').onchange=async e=>{const f=e.target.files[
 // ---- English: the UI is written in Arabic; in English mode every piece of UI text is swapped as it hits the page ----
 // Keys are the Arabic text of one text node (or placeholder / aria-label); EN_RX covers text with a value inside it.
 const EN={
+  'قراءة عداد':'Odometer reading','حدّث العداد':'Update odometer','امسح القراءة':'Delete reading','قراءة عداد ·':'Odometer reading ·',
+  'القراءة بتحدّث آخر عداد ومواعيد الصيانة بس، وملهاش دعوة بالاستهلاك أو المصاريف. ولما تسجّل تفويلة أو صيانة بعدها، بتختفي من السجل لوحدها.':'A reading only updates the odometer and service reminders; it has nothing to do with consumption or spending. Once you log a fill-up or service past it, it drops off the log by itself.',
+  'آخر عداد في السجل':'Last odometer in the log','اكتب قراءة العداد.':'Enter the odometer reading.','التاريخ ده لسه ما جاش.':'That date is in the future.','العداد اتحدّث':'Odometer updated',
   // main screen
   'دفتر البنزين':'Fuel Log','الإعدادات':'Settings','العربية':'Car','الفترة':'Period','متوسط الاستهلاك':'Average consumption','أرقام الفترة':'Period numbers',
   'كل الفترة':'All time','آخر 30 يوم':'Last 30 days','آخر 3 شهور':'Last 3 months','السنة دي':'This year','السنة اللي فاتت':'Last year',
@@ -1953,6 +1996,7 @@ const EN_RX=[
   [/^الإجمالي على (.+):$/,'Total on $1:'],[/^(.+) · عداد$/,'$1 · odometer'],[/^ل\/100 · (كويس|متوسط|عالي)$/,(m,r)=>`L/100 · ${T(r)}`],[/^(اتسجّلت|اتعدّلت) · اتعمل تذكير$/,(m,a)=>`${T(a)} · reminder created`],
   [/^(كم|شهر|شهور) · آخر مرة (.+)$/,(m,u,d)=>`${T(u)} · last ${d}`],[/^التعديلات لسه ما اترفعتش على GitHub: (.+)\.$/,(m,e)=>`Changes not uploaded to GitHub yet: ${T(e)}.`],
   [/^آخر نسخة: (.+) \(من$/,'Last backup: $1 ('],[/^(?:يوم|أيام)\)\. بياناتك .+$/,'days ago). '+BK],[/^آخر نسخة: (.+) \(النهارده\)\. بياناتك .+$/,'Last backup: $1 (today). '+BK],
+  [/^القراءة لازم تبقى أكبر من آخر عداد متسجّل \(([\d.,]+) كم\)\.$/,'The reading must be higher than the last logged odometer ($1 km).'],
   [/^(.+)\.$/,(m,e)=>EN[e]?EN[e]+'.':m]   // an error message with a full stop added
 ];
 if(LANG==='en'){
