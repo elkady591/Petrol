@@ -906,6 +906,8 @@ const logOdo=id=>{const o=[...fillsOf(id).map(f=>f.odo),...servicesOf(id).map(s=
 // a reading typed in by hand ("update odometer") counts only while it's ahead of every fill-up and service
 const liveOdo=id=>{const c=cars.find(c=>c.id===id),r=c&&c.odoR,l=logOdo(id);return r&&!(r.odo<=l)?r:null};
 const curOdo=id=>{const r=liveOdo(id);return r?r.odo:logOdo(id)};
+// km driven since the last fill-up, known only from a later reading
+const sinceFill=id=>{const r=liveOdo(id),f=fillsOf(id).at(-1);return r&&f?r.odo-f.odo:NaN};
 function inPeriod(date){
   if(period==='all')return true;
   if(period==='30'){const d=new Date();d.setDate(d.getDate()-30);return date>=iso(d)}
@@ -1282,7 +1284,7 @@ function renderTL(){
   if(ch.length>=3){const last=ch.slice(-6),n=last.length-1,dd=(new Date(last[n].date)-new Date(last[0].date))/DAY,km=last[n].odo-last[0].odo;
     if(dd>0&&km>0){const nd=new Date(last[n].date+'T00:00');nd.setDate(nd.getDate()+Math.round(dd/n));
       h+=`<div class="tlr"><div class="tli next"><span class="dot">${pumpSvg}</span><span class="r1"><b>التفويلة الجاية تقريبًا</b><span class="m" style="font-size:13px;color:${iso(nd)<today()?'var(--warn)':'var(--muted)'}">~ ${nice(iso(nd))}</span></span>
-        <span class="r2"><span>على عداد ~<span class="n">${fmt(last[n].odo+Math.round(km/n),0)}</span></span><span>بمتوسط <span class="n">${fmt(km/dd,0)}</span> كم/يوم</span></span></div></div>`}}
+        <span class="r2"><span>على عداد ~<span class="n">${fmt(last[n].odo+Math.round(km/n),0)}</span></span><span>بمتوسط <span class="n">${fmt(km/dd,0)}</span> كم/يوم</span></span>${Number.isFinite(sinceFill(car.id))?`<span class="r2"><span>مشيت <span class="n">${fmt(sinceFill(car.id),0)}</span> من حوالي <span class="n">${fmt(Math.round(km/n),0)}</span> كم</span></span>`:''}</div></div>`}}
   if(!items.length)h+='<p class="empty">دوس على + تحت عشان تسجّل أول تفويلة أو صيانة.</p>';
   months.slice(0,tlMonths).forEach(g=>{
     const fu=sum(g.items.filter(i=>i.k==='f'),i=>i.r.money),sv=sum(g.items.filter(i=>i.k==='s'),i=>svTotal(i.s));
@@ -1290,7 +1292,7 @@ function renderTL(){
     g.items.forEach(i=>{
       if(i.k==='o'){h+=`<button class="tli odo" type="button" data-eo="1"><span class="dot">${odoSvg}</span>
           <span class="r1"><b>قراءة عداد · <span class="n">${fmt(i.odo,0)}</span> كم</b></span>
-          <span class="r2"><span>${niceY(i.date)}</span></span></button>`;return}
+          <span class="r2"><span>${niceY(i.date)}</span>${Number.isFinite(sinceFill(car.id))?`<span><span class="n">${fmt(sinceFill(car.id),0)}</span> كم من آخر تفويلة</span>`:''}</span></button>`;return}
       if(i.k==='f'){const r=i.r,tags=[];
         tags.push(Number.isFinite(r.km)?`<span class="tag"><span class="n">${fmt(r.km,0)}</span> كم</span>`:'<span class="tag">أول قراءة</span>');
         if(r.seg){const b=band(r.l100,car)[0];tags.push(`<span class="tag ${b}"><span class="n">${fmt(r.l100)}</span> ل/100 · ${RATE[b]}</span>`,`<span class="tag"><span class="n">${fmt(r.epk,2)}</span> ج/كم</span>`)}
@@ -1334,7 +1336,7 @@ $('odoForm').onsubmit=e=>{e.preventDefault();const car=curCar();if(!car)return;
   if(!(odo>0))return fail('اكتب قراءة العداد.');
   if(date>today())return fail('التاريخ ده لسه ما جاش.');
   if(odo<=l)return fail(`القراءة لازم تبقى أكبر من آخر عداد متسجّل (${fmt(l,0)} كم).`);
-  car.odoR={odo,date};car.u=Date.now();if(!save())return;closeS();render();toast('العداد اتحدّث')};
+  car.odoR={odo,date};car.u=Date.now();if(!save())return;closeS();render();const sf=sinceFill(car.id);toast(Number.isFinite(sf)?`العداد اتحدّث · ${fmt(sf,0)} كم من آخر تفويلة`:'العداد اتحدّث')};
 $('oDel').onclick=()=>{const car=curCar();if(!car)return;car.odoR=null;car.u=Date.now();save();closeS();render();toast('اتمسحت')};
 $('tlSet').onclick=openSettings;
 $('tlSum').onclick=e=>{if(!e.target.closest('[data-per]'))return;
@@ -1907,7 +1909,7 @@ $('importFile').onchange=$('wImport').onchange=async e=>{const f=e.target.files[
 const EN={
   'قراءة عداد':'Odometer reading','حدّث العداد':'Update odometer','امسح القراءة':'Delete reading','قراءة عداد ·':'Odometer reading ·',
   'القراءة بتحدّث آخر عداد ومواعيد الصيانة بس، وملهاش دعوة بالاستهلاك أو المصاريف. ولما تسجّل تفويلة أو صيانة بعدها، بتختفي من السجل لوحدها.':'A reading only updates the odometer and service reminders; it has nothing to do with consumption or spending. Once you log a fill-up or service past it, it drops off the log by itself.',
-  'آخر عداد في السجل':'Last odometer in the log','اكتب قراءة العداد.':'Enter the odometer reading.','التاريخ ده لسه ما جاش.':'That date is in the future.','العداد اتحدّث':'Odometer updated',
+  'آخر عداد في السجل':'Last odometer in the log','اكتب قراءة العداد.':'Enter the odometer reading.','التاريخ ده لسه ما جاش.':'That date is in the future.','العداد اتحدّث':'Odometer updated','كم من آخر تفويلة':'km since last fill-up','مشيت':'Driven','من حوالي':'of about',
   // main screen
   'دفتر البنزين':'Fuel Log','الإعدادات':'Settings','العربية':'Car','الفترة':'Period','متوسط الاستهلاك':'Average consumption','أرقام الفترة':'Period numbers',
   'كل الفترة':'All time','آخر 30 يوم':'Last 30 days','آخر 3 شهور':'Last 3 months','السنة دي':'This year','السنة اللي فاتت':'Last year',
@@ -1996,6 +1998,7 @@ const EN_RX=[
   [/^الإجمالي على (.+):$/,'Total on $1:'],[/^(.+) · عداد$/,'$1 · odometer'],[/^ل\/100 · (كويس|متوسط|عالي)$/,(m,r)=>`L/100 · ${T(r)}`],[/^(اتسجّلت|اتعدّلت) · اتعمل تذكير$/,(m,a)=>`${T(a)} · reminder created`],
   [/^(كم|شهر|شهور) · آخر مرة (.+)$/,(m,u,d)=>`${T(u)} · last ${d}`],[/^التعديلات لسه ما اترفعتش على GitHub: (.+)\.$/,(m,e)=>`Changes not uploaded to GitHub yet: ${T(e)}.`],
   [/^آخر نسخة: (.+) \(من$/,'Last backup: $1 ('],[/^(?:يوم|أيام)\)\. بياناتك .+$/,'days ago). '+BK],[/^آخر نسخة: (.+) \(النهارده\)\. بياناتك .+$/,'Last backup: $1 (today). '+BK],
+  [/^العداد اتحدّث · ([\d.,]+) كم من آخر تفويلة$/,'Odometer updated · $1 km since last fill-up'],
   [/^القراءة لازم تبقى أكبر من آخر عداد متسجّل \(([\d.,]+) كم\)\.$/,'The reading must be higher than the last logged odometer ($1 km).'],
   [/^(.+)\.$/,(m,e)=>EN[e]?EN[e]+'.':m]   // an error message with a full stop added
 ];
