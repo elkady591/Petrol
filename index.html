@@ -281,7 +281,7 @@ html[dir=ltr] .crow svg{transform:scaleX(-1)}
 .tnav .tfab{justify-self:center;width:58px;height:58px;border-radius:50%;background:var(--accent);color:var(--accent-ink);place-items:center;margin-top:-30px;box-shadow:0 6px 18px rgba(224,138,30,.4);border:4px solid var(--panel);padding:0}
 .tnav .tfab svg{width:26px;height:26px}
 .acts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding-bottom:6px}
-.acts button{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:18px 8px;font-weight:600;font-size:15px;color:var(--ink)}
+.acts button{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:18px 2px;font-weight:600;font-size:clamp(13px,3.6vw,15px);color:var(--ink);min-width:0;line-height:1.25}
 .acts i{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;margin:0 auto 8px;color:#fff}
 .acts i svg{width:26px;height:26px}.acts .af{background:var(--accent)}.acts .as{background:var(--petrol)}.acts .at{background:var(--good)}.acts .ao{background:var(--muted)}
 .nocar .tnav,.nocar .tlsum,.nocar #tlChip{display:none!important}
@@ -2015,6 +2015,9 @@ if(LANG==='en'){
   walk(document.body);
   new MutationObserver(ms=>ms.forEach(m=>{if(m.type==='characterData')text(m.target);else m.addedNodes.forEach(walk)})).observe(document.body,{childList:true,subtree:true,characterData:true});
 }
+
+// the add sheet has four tiles side by side: 'Maintenance' is too long for one
+if(LANG==='en')$('addSvc').lastChild.nodeValue='Service';
 
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
