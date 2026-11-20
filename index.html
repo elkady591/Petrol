@@ -419,6 +419,11 @@ html{padding-top:0}
 .stat.sm{align-content:start}
 /* cost per km: fuel and maintenance one under the other, same size */
 .halves{display:grid;margin-top:4px}
+.tank{grid-template-columns:auto minmax(0,1fr);column-gap:16px;align-items:center}
+.tank .tv{display:grid;justify-items:center;gap:0;padding-inline-end:16px;border-inline-end:1px solid var(--line)}
+.tank .tv b{font-size:30px;font-weight:700;line-height:1.1}.tank .tv small{font-size:12px;color:var(--muted)}
+.tank .halves{margin-top:0}.tank .halves .v{font-size:16px;font-weight:700;gap:3px;white-space:nowrap}
+.tank .nt{grid-column:1/-1;font-size:11.5px;color:var(--muted);margin:6px 0 0;padding-top:8px;border-top:1px dashed var(--line)}
 .halves>div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;min-width:0;padding:6px 0}
 .halves>div+div{border-top:1px solid var(--line)}
 .halves .hl{font-size:13px;color:var(--muted)}
@@ -563,6 +568,7 @@ html{padding-top:0}
   </section>
 
   <section class="stats" id="stats" aria-label="أرقام الفترة" data-t="rep"></section>
+  <section class="stat tank" id="tank" aria-label="فُل تانك" data-t="rep" hidden></section>
 
   <section class="card" aria-labelledby="ch" data-t="rep">
     <h2 id="ch">استهلاك كل تفويلة <small>دوس على أي عمود</small></h2>
@@ -933,6 +939,20 @@ function chain(list){
       anchor=r;L=0;M=0}
     prev=r;return r});
 }
+// The tank is at least as big as the most fuel ever put in at once, so the estimate only grows:
+// it gets closer to the real size every time the car is filled from nearly empty.
+function tankEst(id){
+  const rows=chain(fillsOf(id)).filter(r=>r.liters>0);if(!rows.length)return null;
+  const big=rows.reduce((a,b)=>b.liters>a.liters?b:a),cap=big.liters,s=stats(id,()=>true).s;
+  return {cap,big,range:s?cap/s.l100*100:NaN};
+}
+function renderTank(car){
+  const t=car&&tankEst(car.id);$('tank').hidden=!t;if(!t)return;
+  const row=(l,v,u)=>`<div><span class="hl">${l}</span><span class="v"><span class="n">${v}</span><small>${u}</small></span></div>`;
+  $('tank').innerHTML=`<div class="tv"><span class="l">فُل تانك</span><b class="n" dir="ltr">~${fmt(t.cap,0)}</b><small>لتر</small></div>
+    <div class="halves">${row('بيمشي تقريبًا',Number.isFinite(t.range)?fmt(Math.round(t.range/10)*10,0):'—','كم')}${row('تملاه بـ',fmt(Math.round(t.cap*car.price/5)*5,0),'ج')}</div>
+    <p class="nt">على أساس أكبر تفويلة لحد دلوقتي (${niceY(t.big.date)}). الرقم بيدقّ كل ما تفوّل والتانك قرب يخلص.</p>`;
+}
 function stats(id,inRange=inPeriod){
   const rows=chain(fillsOf(id)).filter(r=>inRange(r.date)),t=rows.filter(r=>r.seg);
   let s=null;
@@ -994,6 +1014,8 @@ function render(){
   const half=(l,v)=>`<div><span class="hl">${l}</span><span class="v"><span class="n">${v}</span><small>ج</small></span></div>`;
   $('stats').innerHTML=`<div class="stat big"><span class="l">${big[0][0]}</span><div class="halves">${half('بنزين',s?fmt(s.epk,2):'—')}${half('صيانة',s?fmt(mtKm,2):'—')}</div></div>`+big.slice(1).map(([l,v,u,x])=>`<div class="stat big"><span class="l">${l}</span><span class="v"><span class="n">${v}</span><small>${u}</small></span>${x||''}</div>`).join('')
     +small.map(([l,v,u,x])=>`<div class="stat sm"><span class="l">${l}</span><span class="v"><span class="n">${v}</span>${u?`<small>${u}</small>`:''}</span>${x||''}</div>`).join('');
+
+  renderTank(car);
 
   // masthead line + this car's good/average/high zones around the gauge
   const cf=fillsOf(current),lf=cf.length?cf.reduce((a,b)=>a.date>b.date?a:b):null,dd=lf?Math.round((new Date(today())-new Date(lf.date))/DAY):null;
@@ -1909,7 +1931,7 @@ $('importFile').onchange=$('wImport').onchange=async e=>{const f=e.target.files[
 const EN={
   'قراءة عداد':'Odometer reading','حدّث العداد':'Update odometer','امسح القراءة':'Delete reading','قراءة عداد ·':'Odometer reading ·',
   'القراءة بتحدّث آخر عداد ومواعيد الصيانة بس، وملهاش دعوة بالاستهلاك أو المصاريف. ولما تسجّل تفويلة أو صيانة بعدها، بتختفي من السجل لوحدها.':'A reading only updates the odometer and service reminders; it has nothing to do with consumption or spending. Once you log a fill-up or service past it, it drops off the log by itself.',
-  'آخر عداد في السجل':'Last odometer in the log','اكتب قراءة العداد.':'Enter the odometer reading.','التاريخ ده لسه ما جاش.':'That date is in the future.','العداد اتحدّث':'Odometer updated','كم من آخر تفويلة':'km since last fill-up','مشيت':'Driven','من حوالي':'of about',
+  'آخر عداد في السجل':'Last odometer in the log','بيمشي تقريبًا':'Range, roughly','تملاه بـ':'Fill it for','اكتب قراءة العداد.':'Enter the odometer reading.','التاريخ ده لسه ما جاش.':'That date is in the future.','العداد اتحدّث':'Odometer updated','كم من آخر تفويلة':'km since last fill-up','مشيت':'Driven','من حوالي':'of about',
   // main screen
   'دفتر البنزين':'Fuel Log','الإعدادات':'Settings','العربية':'Car','الفترة':'Period','متوسط الاستهلاك':'Average consumption','أرقام الفترة':'Period numbers',
   'كل الفترة':'All time','آخر 30 يوم':'Last 30 days','آخر 3 شهور':'Last 3 months','السنة دي':'This year','السنة اللي فاتت':'Last year',
@@ -1998,6 +2020,7 @@ const EN_RX=[
   [/^الإجمالي على (.+):$/,'Total on $1:'],[/^(.+) · عداد$/,'$1 · odometer'],[/^ل\/100 · (كويس|متوسط|عالي)$/,(m,r)=>`L/100 · ${T(r)}`],[/^(اتسجّلت|اتعدّلت) · اتعمل تذكير$/,(m,a)=>`${T(a)} · reminder created`],
   [/^(كم|شهر|شهور) · آخر مرة (.+)$/,(m,u,d)=>`${T(u)} · last ${d}`],[/^التعديلات لسه ما اترفعتش على GitHub: (.+)\.$/,(m,e)=>`Changes not uploaded to GitHub yet: ${T(e)}.`],
   [/^آخر نسخة: (.+) \(من$/,'Last backup: $1 ('],[/^(?:يوم|أيام)\)\. بياناتك .+$/,'days ago). '+BK],[/^آخر نسخة: (.+) \(النهارده\)\. بياناتك .+$/,'Last backup: $1 (today). '+BK],
+  [/^على أساس أكبر تفويلة لحد دلوقتي \((.+)\)\. الرقم .+$/,'Based on your biggest fill-up so far ($1). It gets more accurate whenever you fill up with the tank nearly empty.'],
   [/^العداد اتحدّث · ([\d.,]+) كم من آخر تفويلة$/,'Odometer updated · $1 km since last fill-up'],
   [/^القراءة لازم تبقى أكبر من آخر عداد متسجّل \(([\d.,]+) كم\)\.$/,'The reading must be higher than the last logged odometer ($1 km).'],
   [/^(.+)\.$/,(m,e)=>EN[e]?EN[e]+'.':m]   // an error message with a full stop added
